@@ -98,11 +98,19 @@ export interface Alert {
   // Add other properties as needed
 }
 
+export interface Finding {
+  id: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  remediation?: string;
+}
+
 export interface ScanResult {
   scanId: string;
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   progress: number;
-  findings: any[];
+  findings: Finding[];
   services?: {
     name: string;
     port: number;
@@ -172,4 +180,27 @@ export interface SystemHealth {
   uptime: number;
   lastUpdate: string;
   error?: string;
-} 
+}
+
+export interface Vulnerability {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  cvss_score?: number;
+  cve_id?: string;
+  status: 'open' | 'fixed' | 'in_progress' | 'wont_fix' | 'false_positive';
+  affected_asset: string;
+  discovered_date: string;
+  remediation?: string;
+}
+
+export interface NetworkDevice {
+  id: string;
+  name: string;
+  ip: string;
+  mac?: string;
+  type: string;
+  status: 'online' | 'offline';
+  last_seen: string;
+}

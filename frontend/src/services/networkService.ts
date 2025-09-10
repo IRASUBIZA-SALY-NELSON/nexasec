@@ -1,5 +1,4 @@
 import { fetchConfig, API_URL } from '@/lib/api';
-import { NetworkDevice } from '@/types';
 import { api } from './api';
 
 export interface NetworkNode {
@@ -41,6 +40,20 @@ export interface DevicesResponse {
   total: number;
   online: number;
   offline: number;
+}
+
+export interface ServiceInfo {
+  name: string;
+  port: number;
+  status: string;
+  version?: string;
+}
+
+export interface HostDetails {
+  ip: string;
+  mac?: string;
+  services: ServiceInfo[];
+  nmap_error?: string;
 }
 
 export const networkApi = {
@@ -134,7 +147,7 @@ export const networkInfoApi = {
     if (!response.ok) throw new Error('Failed to load network info');
     return response.json();
   },
-  getHostDetails: async (ip: string): Promise<{ ip: string; mac?: string; services: any[]; nmap_error?: string }> => {
+  getHostDetails: async (ip: string): Promise<HostDetails> => {
     const response = await fetch(`${API_URL}/network/host?ip=${encodeURIComponent(ip)}`, { ...fetchConfig });
     if (!response.ok) throw new Error('Failed to load host details');
     return response.json();

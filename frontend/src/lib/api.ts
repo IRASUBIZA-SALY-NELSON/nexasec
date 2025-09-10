@@ -4,6 +4,32 @@ import { toast } from 'react-hot-toast';
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
+// Define proper types for API responses
+interface ApiErrorResponse {
+  message?: string;
+  detail?: string;
+}
+
+interface UserData {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+}
+
+interface SignupData {
+  email: string;
+  password: string;
+  name?: string;
+  company?: string;
+}
+
+interface ProfileUpdateData {
+  name?: string;
+  email?: string;
+  company?: string;
+}
+
 export const fetchConfig = {
   credentials: 'include' as RequestCredentials,
   mode: 'cors' as RequestMode,
@@ -14,6 +40,7 @@ export const fetchConfig = {
       : {})
   }
 };
+
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
@@ -21,7 +48,6 @@ const apiClient = axios.create({
   },
   withCredentials: true, 
 });
-
 
 apiClient.interceptors.request.use(
   (config) => {
@@ -71,10 +97,11 @@ apiClient.interceptors.response.use(
 );
 
 // Error handler
-const handleApiError = (error: AxiosError) => {
+const handleApiError = (error: AxiosError<ApiErrorResponse>) => {
   const status = error.response?.status;
   const message = 
-    (error.response?.data as any)?.message || 
+    error.response?.data?.message || 
+    error.response?.data?.detail ||
     error.message || 
     'An unexpected error occurred';
   
@@ -102,18 +129,18 @@ export const handleLogout = () => {
 };
 
 // Session management
-export const getSession = () => {
+export const getSession = (): UserData | null => {
   try {
     const userData = getCookie('user_data');
     if (!userData) return null;
-    return JSON.parse(userData as string);
+    return JSON.parse(userData as string) as UserData;
   } catch (error) {
     console.error('Error parsing user data:', error);
     return null;
   }
 };
 
-export const setSession = (userData: any) => {
+export const setSession = (userData: UserData) => {
   setCookie('user_data', JSON.stringify(userData), { maxAge: 60 * 60 * 24 * 7 }); // 1 week
 };
 
@@ -121,7 +148,7 @@ export const setSession = (userData: any) => {
 export const api = {
   // Auth endpoints
   auth: {
-    login: async (email: string, password: string) => {
+    login: async (email: string, password: string): Promise<UserData> => {
       const response = await apiClient.post('/auth/login/json', { email, password });
       const { access_token, refresh_token } = response.data;
       
@@ -136,7 +163,7 @@ export const api = {
       return userResponse.data;
     },
     
-    signup: async (userData: any) => {
+    signup: async (userData: SignupData) => {
       const response = await apiClient.post('/auth/signup', userData);
       return response.data;
     },
@@ -164,12 +191,12 @@ export const api = {
   
   // User endpoints
   user: {
-    getProfile: async () => {
+    getProfile: async (): Promise<UserData> => {
       const response = await apiClient.get('/user/profile');
       return response.data;
     },
     
-    updateProfile: async (userData: any) => {
+    updateProfile: async (userData: ProfileUpdateData): Promise<UserData> => {
       const response = await apiClient.put('/user/profile', userData);
       // Update session with new user data
       setSession(response.data);
@@ -286,4 +313,4 @@ export const api = {
   },
 };
 
-export default api; 
+export default api;

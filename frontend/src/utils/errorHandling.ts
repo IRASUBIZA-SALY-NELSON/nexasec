@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 interface ErrorContext {
   component?: string;
   action?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export const captureError = (error: unknown, context: ErrorContext = {}) => {
@@ -23,4 +23,4 @@ export const captureError = (error: unknown, context: ErrorContext = {}) => {
   
   // You could also add additional error handling logic here
   // such as showing a toast notification
-}; 
+};
