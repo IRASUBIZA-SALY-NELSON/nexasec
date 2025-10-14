@@ -11,7 +11,7 @@ export const captureError = (error: unknown, context: ErrorContext = {}) => {
   
   // Capture the error with Sentry
   if (error instanceof Error) {
-    Sentry.captureException(error, { 
+    Sentry.captureException(error, {  
       extra: context
     });
   } else {

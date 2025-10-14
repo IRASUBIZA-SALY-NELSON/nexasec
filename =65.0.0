@@ -1,0 +1,8 @@
+Requirement already satisfied: setuptools in ./venv/lib/python3.13/site-packages (80.9.0)
+Collecting Pillow==9.5.0
+  Downloading Pillow-9.5.0.tar.gz (50.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.5/50.5 MB 34.0 kB/s  0:37:32
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
