@@ -9,7 +9,7 @@ import SummaryCards from "@/components/dashboard/SummaryCards";
 import { scanService } from "@/services/scanService";
 import { networkApi, NetworkMap, DiscoveredDevice } from "@/services/networkService";
 import NetworkGraph from '@/components/NetworkGraph';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import CyberLoader from '@/components/ui/CyberLoader';
 import * as api from "@/services/api";
 import { logsApi } from "@/services/api";
 
@@ -54,11 +54,11 @@ export default function NetworkPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch discovered devices from the background service
       const devicesResponse = await networkApi.getDiscoveredDevices();
       console.log('Discovered devices:', devicesResponse);
-      
+
       // Convert discovered devices to NetworkDevice format
       const deviceList: NetworkDevice[] = devicesResponse.devices.map((device: DiscoveredDevice) => ({
         id: device.ip,
@@ -77,26 +77,45 @@ export default function NetworkPage() {
 
       // Fetch network map
       const networkMap = await networkApi.getNetworkMap();
-      
+
       // Fetch discovery status
       const status = await networkApi.getDiscoveryStatus();
       setDiscoveryStatus(status);
-      
+
       // Try to fetch scan history
       let scanHistoryData;
       try {
         scanHistoryData = await scanService.getAllScans();
+        // Map backend fields to UI expectations
+        const mappedHistory: NetworkScan[] = (scanHistoryData || []).map((s: any) => {
+          const created = s.created_at ? new Date(s.created_at) : null;
+          const updated = s.end_time ? new Date(s.end_time) : (s.updated_at ? new Date(s.updated_at) : null);
+          const durationSec = created && updated ? Math.max(0, Math.round((updated.getTime() - created.getTime()) / 1000)) : null;
+          const vulnCount = typeof s.vulnerabilities_found === 'number'
+            ? s.vulnerabilities_found
+            : (s.vulnerability_counts
+                ? Object.values(s.vulnerability_counts).reduce((acc: number, val: any) => acc + (typeof val === 'number' ? val : 0), 0)
+                : 0);
+          return {
+            id: s.id || s._id || '',
+            timestamp: created ? created.toLocaleString() : '',
+            duration: durationSec !== null ? `${durationSec}s` : '-',
+            devicesScanned: typeof s.total_hosts === 'number' ? s.total_hosts : 0,
+            vulnerabilitiesFound: vulnCount,
+            status: (s.status || 'completed') as NetworkScan['status'],
+          };
+        });
+        setScanHistory(mappedHistory);
       } catch (err) {
         console.error('Error fetching scan history:', err);
         scanHistoryData = [];
       }
-      
+
       setDevices(deviceList);
       setFilteredDevices(deviceList);
-      setScanHistory(scanHistoryData);
       setNetworkData(networkMap);
       setError(null);
-      
+
     } catch (err) {
       setError('Failed to load network data');
       console.error('Error loading network data:', err);
@@ -107,19 +126,19 @@ export default function NetworkPage() {
 
   useEffect(() => {
     loadData();
-    
+
     // Set up periodic refresh every 30 seconds
     const interval = setInterval(loadData, 30000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     let filtered = devices;
-    
+
     // Apply search filter
     if (searchQuery) {
-      filtered = filtered.filter(device => 
+      filtered = filtered.filter(device =>
         device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         device.ip.includes(searchQuery) ||
         device.hostname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -127,7 +146,7 @@ export default function NetworkPage() {
         device.vendor?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
+
     // Apply tab filter
     if (activeTab !== "overview") {
       if (activeTab === "online") {
@@ -138,7 +157,7 @@ export default function NetworkPage() {
         filtered = filtered.filter(device => device.vulnerabilities > 0);
       }
     }
-    
+
     setFilteredDevices(filtered);
   }, [searchQuery, activeTab, devices]);
 
@@ -146,7 +165,7 @@ export default function NetworkPage() {
     try {
       setIsScanning(true);
       toast.loading("Network scan in progress...");
-      
+
       // Start a new scan
       const scan = await scanService.startScan({
         networkTarget: 'all',
@@ -161,15 +180,15 @@ export default function NetworkPage() {
         // fetch latest logs chunk
         try {
           const logs = await logsApi.list({ limit: 50 });
-          const messages = (logs.items || []).slice(0, 50).map((it:any)=> `${it.time} ${it.level} ${it.message}`);
+          const messages = (logs.items || []).slice(0, 50).map((it: any) => `${it.time} ${it.level} ${it.message}`);
           setScanLogs(messages);
-        } catch {}
+        } catch { }
         if (status.status === 'completed') {
           clearInterval(pollInterval);
           setIsScanning(false);
           toast.dismiss();
           toast.success("Network scan completed");
-          
+
           // Refresh data
           await loadData();
         }
@@ -198,7 +217,7 @@ export default function NetworkPage() {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <CyberLoader fullScreen text="Mapping your network..." duration={3000} />;
   }
 
   if (error) {
@@ -217,13 +236,13 @@ export default function NetworkPage() {
         <div>
           <h1 className="text-2xl font-bold mb-2 md:mb-0">Network Security</h1>
           <p className="text-sm text-gray-400">
-            Discovery Service: {discoveryStatus.running ? 
-              <span className="text-green-400">🟢 Running ({discoveryStatus.discovered_devices_count} devices)</span> : 
+            Discovery Service: {discoveryStatus.running ?
+              <span className="text-green-400">🟢 Running ({discoveryStatus.discovered_devices_count} devices)</span> :
               <span className="text-red-400">🔴 Stopped</span>
             }
           </p>
         </div>
-        <ActionButtons 
+        <ActionButtons
           primaryAction={{
             label: isScanning ? "Scanning..." : "Run Network Scan",
             onClick: handleRunScan
@@ -233,7 +252,7 @@ export default function NetworkPage() {
 
       {/* Network Summary */}
       <div className="mb-6">
-        <SummaryCards 
+        <SummaryCards
           items={[
             {
               title: "Total Devices",
@@ -265,7 +284,7 @@ export default function NetworkPage() {
 
       {/* Tabs and Search */}
       <div className="mb-4">
-        <FilterTabs 
+        <FilterTabs
           tabs={[
             { id: "overview", label: "Overview" },
             { id: "online", label: "Online" },
@@ -276,9 +295,9 @@ export default function NetworkPage() {
           onChange={setActiveTab}
         />
       </div>
-      
+
       <div className="mb-6">
-        <SearchBar 
+        <SearchBar
           placeholder="Search devices by name, IP, MAC, hostname, or vendor..."
           value={searchQuery}
           onChange={setSearchQuery}
@@ -293,7 +312,7 @@ export default function NetworkPage() {
             <div className="absolute inset-y-0 left-0 w-1/2 bg-cyan-600 scanbar"></div>
           </div>
           <div className="bg-black/40 mt-3 rounded p-3 h-40 overflow-auto font-mono text-xs text-gray-300">
-            {scanLogs.map((l, i)=> (<div key={i}>{l}</div>))}
+            {scanLogs.map((l, i) => (<div key={i}>{l}</div>))}
           </div>
         </div>
       )}
@@ -366,10 +385,9 @@ export default function NetworkPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      device.status === 'online' ? "bg-green-900/30 text-green-400" : 
-                      "bg-red-900/30 text-red-400"
-                    }`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${device.status === 'online' ? "bg-green-900/30 text-green-400" :
+                        "bg-red-900/30 text-red-400"
+                      }`}>
                       {device.status.charAt(0).toUpperCase() + device.status.slice(1)}
                     </span>
                   </td>
@@ -385,9 +403,8 @@ export default function NetworkPage() {
                     {device.first_seen ? formatTimestamp(device.first_seen) : <span className="text-gray-600">N/A</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`${
-                      device.vulnerabilities > 0 ? "text-red-400" : "text-green-400"
-                    }`}>
+                    <span className={`${device.vulnerabilities > 0 ? "text-red-400" : "text-green-400"
+                      }`}>
                       {device.vulnerabilities}
                     </span>
                   </td>
@@ -401,19 +418,19 @@ export default function NetworkPage() {
       {/* Show message if no devices found */}
       {filteredDevices.length === 0 && (
         <div className="text-center py-8">
-          <div className="text-gray-400 mb-4">
-            {devices.length === 0 ? 
-              "No devices discovered yet. The background discovery service is scanning your network..." :
-              "No devices match your search criteria."
-            }
-          </div>
-          {devices.length === 0 && (
-            <button 
-              onClick={loadData}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md transition-colors"
-            >
-              Refresh
-            </button>
+          {devices.length === 0 ? (
+            <div className="flex flex-col items-center gap-4">
+              <CyberLoader fullScreen={false} text="Background discovery is scanning your network..." duration={5000} />
+              <p className="text-gray-400">No devices discovered yet. Please wait while we enumerate hosts and services.</p>
+              <button
+                onClick={loadData}
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
+          ) : (
+            <div className="text-gray-400">No devices match your search criteria.</div>
           )}
         </div>
       )}
@@ -456,18 +473,16 @@ export default function NetworkPage() {
                       {scan.devicesScanned}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`${
-                        scan.vulnerabilitiesFound > 0 ? "text-red-400" : "text-green-400"
-                      }`}>
+                      <span className={`${scan.vulnerabilitiesFound > 0 ? "text-red-400" : "text-green-400"
+                        }`}>
                         {scan.vulnerabilitiesFound}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        scan.status === 'completed' ? "bg-green-900/30 text-green-400" : 
-                        scan.status === 'in_progress' ? "bg-blue-900/30 text-blue-400" :
-                        "bg-red-900/30 text-red-400"
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${scan.status === 'completed' ? "bg-green-900/30 text-green-400" :
+                          scan.status === 'in_progress' ? "bg-blue-900/30 text-blue-400" :
+                            "bg-red-900/30 text-red-400"
+                        }`}>
                         {scan.status.charAt(0).toUpperCase() + scan.status.slice(1)}
                       </span>
                     </td>

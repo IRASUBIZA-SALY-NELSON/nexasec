@@ -1,5 +1,5 @@
-moviepy==1.0.3
-imageio==2.31.1
-imageio-ffmpeg==0.4.8
-setuptools>=65.0.0
-Pillow==9.5.0
+moviepy>=2.2.1
+imageio>=2.31.1
+imageio-ffmpeg>=0.6.0
+setuptools>=65,<81
+Pillow>=11.0.0

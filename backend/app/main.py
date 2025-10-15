@@ -83,7 +83,7 @@ async def startup_db_client():
         
         # Initialize and start network discovery service
         try:
-            db = get_database()
+            db = await get_database()
             network_discovery_service = NetworkDiscoveryService(db)
             await network_discovery_service.start_background_discovery()
             logger.info("Background network discovery service started")

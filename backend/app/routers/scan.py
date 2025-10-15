@@ -266,7 +266,7 @@ async def list_scans(
     cursor = db["scans"].find(query).skip(skip).limit(limit).sort("created_at", -1)
     scans = await cursor.to_list(length=limit)
     
-    # Format the response without strict schema validation
+    # Format the response with richer fields for UI mapping
     return [
         {
             "id": str(scan["_id"]),
@@ -274,7 +274,10 @@ async def list_scans(
             "target": scan.get("target"),
             "created_at": scan.get("created_at"),
             "updated_at": scan.get("updated_at"),
+            "end_time": scan.get("end_time"),
             "progress": scan.get("progress"),
+            "total_hosts": scan.get("total_hosts"),
+            "vulnerability_counts": scan.get("vulnerability_counts"),
         }
         for scan in scans
     ]
