@@ -97,7 +97,7 @@ apiClient.interceptors.response.use(
 );
 
 // Error handler
-const handleApiError = (error: AxiosError<any>) => {
+const handleApiError = (error: AxiosError<unknown>) => {
   const status = error.response?.status;
   const data = error.response?.data as ApiErrorResponse | undefined;
   const message =

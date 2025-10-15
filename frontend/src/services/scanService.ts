@@ -22,11 +22,11 @@ export const scanService = {
         formData.append('scanType', config.scanType);
         formData.append('useCustomPasswordList', String(config.useCustomPasswordList));
         formData.append('customPasswordList', config.customPasswordList);
-        
+
         const response = await api.post<FormData, { scanId: string }>('/scans/start', formData);
         return response;
       }
-      
+
       // Regular JSON request without file
       const response = await api.post<ScanConfig, { scanId: string }>('/scans/start', config);
       return response;
@@ -38,7 +38,7 @@ export const scanService = {
 
   getScanStatus: async (scanId: string): Promise<ScanResult> => {
     try {
-      const response = await api.get(`/scans/${scanId}/status`);
+      const response = await api.get<ScanResult>(`/scans/${scanId}/status`);
       return response;
     } catch (error) {
       console.error('Error getting scan status:', error);
@@ -47,7 +47,7 @@ export const scanService = {
   },
 
   getScanResults: async (id: string): Promise<ScanResult> => {
-    const response = await api.get(`/scans/${id}/results`);
+    const response = await api.get<ScanResult>(`/scans/${id}/results`);
     return response;
   },
 

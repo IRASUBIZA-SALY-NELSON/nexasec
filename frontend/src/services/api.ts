@@ -344,7 +344,7 @@ export const api = {
   dashboardApi,
   logsApi,
 
-  get: async (endpoint: string) => {
+  get: async <TResp = unknown>(endpoint: string): Promise<TResp> => {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...getFetchOptions(),
       method: 'GET'
@@ -359,7 +359,7 @@ export const api = {
       }
     }
 
-    return response.json();
+    return response.json() as Promise<TResp>;
   },
 
   post: async <TBody extends object | FormData = object, TResp = unknown>(endpoint: string, data: TBody): Promise<TResp> => {

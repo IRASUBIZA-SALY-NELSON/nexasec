@@ -65,7 +65,7 @@ export const networkApi = {
   getDiscoveredDevices: async (options?: { includeVulns?: boolean }): Promise<DevicesResponse> => {
     try {
       const qs = options?.includeVulns ? '?include_vulns=true' : '';
-      const response = await api.get(`/network/devices${qs}`);
+      const response = await api.get<DevicesResponse>(`/network/devices${qs}`);
       return response;
     } catch (error) {
       console.error('Error fetching discovered devices:', error);
@@ -86,8 +86,8 @@ export const networkApi = {
   // Get network map (enhanced with discovery service data)
   getNetworkMap: async (): Promise<NetworkMap> => {
     try {
-      const response = await api.get('/network/map');
-      return response || { nodes: [], connections: [] };
+      const response = await api.get<NetworkMap>('/network/map');
+      return response || { nodes: [], connections: [] } as NetworkMap;
     } catch (error) {
       console.error('Error fetching network map:', error);
       return { nodes: [], connections: [] };
@@ -128,7 +128,12 @@ export const networkApi = {
     quick_scan_interval: number;
   }> => {
     try {
-      const response = await api.get('/network/discovery/status');
+      const response = await api.get<{
+        running: boolean;
+        discovered_devices_count: number;
+        scan_interval: number;
+        quick_scan_interval: number;
+      }>('/network/discovery/status');
       return response;
     } catch (error) {
       console.error('Error getting discovery status:', error);

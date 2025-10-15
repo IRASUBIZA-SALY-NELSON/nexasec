@@ -1,5 +1,4 @@
 /// <reference lib="webworker" />
-declare const self: ServiceWorkerGlobalScope;
 
 // Create a new service worker file
 const CACHE_NAME = 'nexa-security-cache-v1';
@@ -10,7 +9,10 @@ const urlsToCache = [
   '/api/scans'
 ];
 
-self.addEventListener('install', (event: ExtendableEvent) => {
+// Cast the global self to a ServiceWorkerGlobalScope for correct typings
+const sw = self as unknown as ServiceWorkerGlobalScope;
+
+sw.addEventListener('install', (event: ExtendableEvent) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -19,7 +21,7 @@ self.addEventListener('install', (event: ExtendableEvent) => {
   );
 });
 
-self.addEventListener('fetch', (event: FetchEvent) => {
+sw.addEventListener('fetch', (event: FetchEvent) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -54,4 +56,4 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         });
       })
   );
-}); 
+});
