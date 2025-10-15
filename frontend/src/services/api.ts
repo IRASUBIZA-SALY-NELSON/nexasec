@@ -1,4 +1,5 @@
-import axios from 'axios';
+// axios not used in this module
+// import axios from 'axios';
 import { API_URL } from '@/lib/api';
 import { secureStorage } from '@/lib/storage';
 import { getCookie } from 'cookies-next';
@@ -38,7 +39,7 @@ const handleApiResponse = async (response: Response) => {
     try {
       const errorData = await response.json();
       errorMessage = errorData.detail || 'Request failed';
-    } catch (_) {
+    } catch {
       errorMessage = `${response.status}: ${response.statusText}`;
     }
     throw new Error(errorMessage);
