@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { PricingProps, PricingTierProps } from "@/types";
 
@@ -12,15 +12,12 @@ const PricingTier: React.FC<PricingTierProps> = ({
   buttonText,
   buttonLink,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
   return (
-    <div 
-      className={`rounded-lg p-4 sm:p-6 flex flex-col h-full transition-all duration-300 ${
-        highlighted 
-          ? " border-2 border-cyan-400 shadow-lg shadow-cyan-400/20 -translate-y-2" 
+    <div
+      className={`rounded-lg p-4 sm:p-6 flex flex-col h-full transition-all duration-300 ${highlighted
+          ? " border-2 border-cyan-400 shadow-lg shadow-cyan-400/20 -translate-y-2"
           : " border border-gray-800 hover:bg-gradient-to-br hover:from-black hover:to-gray-900 hover:border-2 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-400/20 hover:-translate-y-2"
-      }`}
+        }`}
     >
       <div className="mb-4">
         <h3 className={`text-lg sm:text-xl font-bold ${highlighted ? "text-cyan-400" : "text-white"}`}>{name}</h3>
@@ -30,15 +27,15 @@ const PricingTier: React.FC<PricingTierProps> = ({
         </div>
         <p className="mt-2 text-sm sm:text-base text-gray-400">{description}</p>
       </div>
-      
+
       <div className="flex-grow">
         <ul className="space-y-2 sm:space-y-3 mb-6">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start">
-              <svg 
-                className={`h-5 w-5 flex-shrink-0 ${highlighted ? "text-cyan-400" : "text-gray-400"} mr-2 mt-0.5`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                className={`h-5 w-5 flex-shrink-0 ${highlighted ? "text-cyan-400" : "text-gray-400"} mr-2 mt-0.5`}
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -48,14 +45,13 @@ const PricingTier: React.FC<PricingTierProps> = ({
           ))}
         </ul>
       </div>
-      
-      <Link 
+
+      <Link
         href={buttonLink}
-        className={`text-center py-2 sm:py-3 px-4 rounded-full font-medium transition-colors ${
-          highlighted
-            ? "bg-cyan-400 text-black hover:bg-cyan-300" 
+        className={`text-center py-2 sm:py-3 px-4 rounded-full font-medium transition-colors ${highlighted
+            ? "bg-cyan-400 text-black hover:bg-cyan-300"
             : "border border-cyan-400 text-cyan-400 hover:bg-cyan-900/80"
-        }`}
+          }`}
       >
         {buttonText}
       </Link>
@@ -73,7 +69,7 @@ export default function Pricing({ id }: PricingProps) {
             Choose the plan that fits your security needs. All plans include 24/7 monitoring and support.
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           <PricingTier
             name="Basic Security"
@@ -90,7 +86,7 @@ export default function Pricing({ id }: PricingProps) {
             buttonText="Get Started"
             buttonLink="/auth/signup?plan=basic"
           />
-          
+
           <PricingTier
             name="Advanced Security"
             price="$699"
@@ -103,11 +99,11 @@ export default function Pricing({ id }: PricingProps) {
               "Incident Response Team",
               "Monthly Security Assessment"
             ]}
-           
+
             buttonText="Get Started"
             buttonLink="/auth/signup?plan=advanced"
           />
-          
+
           <PricingTier
             name="Enterprise"
             price="Custom"
@@ -125,7 +121,7 @@ export default function Pricing({ id }: PricingProps) {
             buttonLink="/contact"
           />
         </div>
-        
+
         <div className="mt-12 sm:mt-16 text-center">
           <p className="text-gray-400">
             Need a custom solution? <Link href="/contact" className="text-cyan-400 hover:underline">Contact our team</Link> for a personalized quote.
@@ -134,4 +130,4 @@ export default function Pricing({ id }: PricingProps) {
       </div>
     </section>
   );
-} 
+}

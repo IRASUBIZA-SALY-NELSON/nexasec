@@ -2,11 +2,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Shield, Mail, Phone, MapPin, Clock, Send } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
+
+type ContactFormData = {
+  name: string;
+  email: string;
+  company: string;
+  phone: string;
+  message: string;
+  interest: string;
+};
 
 // Simulated API call function
-const submitContactForm = async (formData: any) => {
+const submitContactForm = async (formData: ContactFormData) => {
   // In a real app, this would be an API call
   console.log("Form submitted:", formData);
   await new Promise(resolve => setTimeout(resolve, 1500));
@@ -14,7 +24,7 @@ const submitContactForm = async (formData: any) => {
 };
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContactFormData>({
     name: "",
     email: "",
     company: "",
@@ -26,7 +36,7 @@ export default function ContactPage() {
 
   // React Query mutation
   const mutation = useMutation({
-    mutationFn: submitContactForm,
+    mutationFn: (data: ContactFormData) => submitContactForm(data),
     onSuccess: () => {
       // Redirect after success
       setTimeout(() => {
@@ -68,7 +78,7 @@ export default function ContactPage() {
       <div className="container mx-auto px-4 py-16 relative z-10">
         <div className="mb-12 text-center">
           <Link href="/" className="inline-block mb-8">
-            <img src="/logo.png" alt="NexaSec Logo" className="h-12" />
+            <Image src="/logo.png" alt="NexaSec Logo" width={96} height={48} />
           </Link>
           <h1 className="text-4xl font-bold mb-4">Get in <span className="text-cyan-400">Touch</span></h1>
           <div className="h-1 w-20 bg-cyan-400 mx-auto mb-6"></div>
@@ -148,7 +158,7 @@ export default function ContactPage() {
               
               <div className="mt-8 pt-8 border-t border-gray-800/60">
                 <div className="bg-gradient-to-r from-cyan-500/10 to-cyan-400/5 rounded-md p-4 border-l-4 border-cyan-400">
-                  <h3 className="text-sm font-medium text-cyan-400 mb-2">Rwanda's Leading Cybersecurity Provider</h3>
+                  <h3 className="text-sm font-medium text-cyan-400 mb-2">Rwanda&apos;s Leading Cybersecurity Provider</h3>
                   <p className="text-sm text-gray-300">
                     Proudly serving businesses across Rwanda with cutting-edge security solutions tailored to the East African market.
                   </p>
@@ -338,4 +348,4 @@ export default function ContactPage() {
       </div>
     </div>
   );
-} 
+}

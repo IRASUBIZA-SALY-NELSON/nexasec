@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import AuthForm from "@/components/AuthForm";
 import PlanSelector from "@/components/PlanSelector";
 import { useAuthContext } from "@/providers/AuthProvider";
+import Image from "next/image";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -58,7 +59,7 @@ export default function SignUp() {
         <div className="p-8">
           <div className="flex justify-center mb-6">
             <Link href="/">
-              <img src="/logo.png" alt="NexaSec Logo" className="h-32" />
+              <Image src="/logo.png" alt="NexaSec Logo" width={128} height={128} />
             </Link>
           </div>
           

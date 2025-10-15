@@ -1,8 +1,8 @@
 "use client"
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { startNetworkScan, getScanStatus, getScanResults, downloadScanResults, ScanConfig, ScanResult, searchScanResults } from "@/services/scanService";
-import { Network, Search, Download, AlertTriangle, CheckCircle, Clock, Shield, Terminal } from "lucide-react";
+import { startNetworkScan, getScanStatus, downloadScanResults, ScanConfig, ScanResult, searchScanResults } from "@/services/scanService";
+import { Search, Download, Shield, Terminal } from "lucide-react";
 
 export default function NetworkScanPage() {
   const [networkTarget, setNetworkTarget] = useState("");
@@ -14,10 +14,9 @@ export default function NetworkScanPage() {
   const [scanId, setScanId] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any | null>(null);
+  const [searchResults, setSearchResults] = useState<unknown | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [loading, setLoading] = useState(false);
 
   // Poll for scan status if a scan is in progress
   useEffect(() => {
@@ -79,7 +78,6 @@ export default function NetworkScanPage() {
     }
     
     try {
-      setLoading(true);
       setIsScanning(true);
       setLogs([`Starting ${scanType} scan on ${networkTarget}...`]);
       
@@ -98,9 +96,7 @@ export default function NetworkScanPage() {
       console.error("Error starting scan:", error);
       setIsScanning(false);
       toast.error("Failed to start network scan");
-    } finally {
-      setLoading(false);
-    }
+    } finally {}
   };
 
   const handleSearch = async () => {
@@ -109,7 +105,7 @@ export default function NetworkScanPage() {
     try {
       const results = await searchScanResults(scanId);
       // Filter results client-side based on searchQuery
-      const filteredResults = filterResultsByQuery(results, searchQuery);
+      const filteredResults = filterResultsByQuery(results as unknown, searchQuery);
       setSearchResults(filteredResults);
     } catch (error) {
       console.error("Error searching results:", error);
@@ -118,11 +114,14 @@ export default function NetworkScanPage() {
   };
 
   // Add helper function to filter results
-  const filterResultsByQuery = (results: any, query: string) => {
+  const filterResultsByQuery = (results: unknown, query: string) => {
     // Implement your search logic here
-    return results.filter((result: any) => 
-      JSON.stringify(result).toLowerCase().includes(query.toLowerCase())
-    );
+    try {
+      const arr = Array.isArray(results) ? results : [];
+      return arr.filter((result) => JSON.stringify(result).toLowerCase().includes(query.toLowerCase()));
+    } catch {
+      return [] as unknown[];
+    }
   };
 
   const handleDownload = async () => {
@@ -502,4 +501,4 @@ export default function NetworkScanPage() {
       )}
     </div>
   );
-} 
+}

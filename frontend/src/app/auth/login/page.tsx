@@ -6,7 +6,6 @@ import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useAuthContext } from "@/providers/AuthProvider";
 import AuthForm from "@/components/AuthForm";
-import { api } from '@/services/api';
 import Image from "next/image";
 
 export default function Login() {
@@ -18,7 +17,6 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
 
     if (!email || !password) {
       toast.error("Please enter both email and password");
@@ -28,7 +26,7 @@ export default function Login() {
     try {
       setIsLoading(true);
 
-      const response = await login({
+      await login({
         email: email,
         password: password,
       });

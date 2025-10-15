@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+// no React state needed here
 import { Shield, ShieldCheck, ShieldAlert } from "lucide-react";
 
 export interface Plan {
@@ -62,11 +62,10 @@ export default function PlanSelector({ selectedPlan, onSelectPlan }: PlanSelecto
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className={`relative border rounded-lg p-6 transition-all ${
-              selectedPlan === plan.id
+            className={`relative border rounded-lg p-6 transition-all ${selectedPlan === plan.id
                 ? "border-cyan-500 bg-cyan-900/20"
                 : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
-            }`}
+              }`}
             onClick={() => onSelectPlan(plan.id)}
           >
             {plan.recommended && (
@@ -74,7 +73,7 @@ export default function PlanSelector({ selectedPlan, onSelectPlan }: PlanSelecto
                 Recommended
               </div>
             )}
-            
+
             <div className="flex justify-center mb-4">
               {plan.id === "basic" ? (
                 <Shield className="h-12 w-12 text-cyan-400" />
@@ -84,10 +83,10 @@ export default function PlanSelector({ selectedPlan, onSelectPlan }: PlanSelecto
                 <ShieldAlert className="h-12 w-12 text-cyan-400" />
               )}
             </div>
-            
+
             <h3 className="text-lg font-medium text-center mb-2">{plan.name}</h3>
             <p className="text-xl font-bold text-center mb-4">{plan.price}</p>
-            
+
             <ul className="space-y-2">
               {plan.features.map((feature, index) => (
                 <li key={index} className="flex items-start">
@@ -98,15 +97,14 @@ export default function PlanSelector({ selectedPlan, onSelectPlan }: PlanSelecto
                 </li>
               ))}
             </ul>
-            
+
             <div className="mt-6">
               <button
                 type="button"
-                className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
-                  selectedPlan === plan.id
+                className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${selectedPlan === plan.id
                     ? "bg-cyan-600 hover:bg-cyan-700 text-white"
                     : "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                }`}
+                  }`}
               >
                 {selectedPlan === plan.id ? "Selected" : "Select Plan"}
               </button>
@@ -116,4 +114,4 @@ export default function PlanSelector({ selectedPlan, onSelectPlan }: PlanSelecto
       </div>
     </div>
   );
-} 
+}
