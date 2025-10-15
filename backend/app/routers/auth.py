@@ -82,6 +82,9 @@ class LoginInput(BaseModel):
     email: EmailStr
     password: str
 
+class RefreshInput(BaseModel):
+    refreshToken: str
+
 @router.post("/signup", response_model=UserResponse)
 async def signup(
     user_in: UserCreate,
@@ -196,6 +199,14 @@ async def login_json(
                 detail="Too many login attempts. Please try again later."
             )
         
+        # Basic guard for legacy bcrypt 72-byte limit (helps produce a clearer error)
+        if len(login_data.password.encode("utf-8")) > 72:
+            logger.warning("Password exceeds bcrypt's 72-byte limit")
+            raise HTTPException(
+                status_code=400,
+                detail="Password too long. Please use a password of 72 characters or fewer, or reset your password."
+            )
+        
         # Authenticate user
         user = await authenticate_user(db, login_data.email, login_data.password)
         if not user:
@@ -231,34 +242,17 @@ async def login_json(
             detail="An unexpected error occurred. Please try again later."
         )
 
-@router.get("/me", response_model=UserResponse)
-async def get_current_user_info(
-    current_user: UserInDB = Depends(get_current_user)
-) -> Any:
-    """
-    Get current user information.
-    """
-    return UserResponse(
-        id=str(current_user.id),
-        email=current_user.email,
-        full_name=current_user.full_name,
-        company_name=getattr(current_user, 'company_name', None),
-        role=current_user.role,
-        subscription_tier=getattr(current_user, 'subscription_tier', current_user.subscription),
-        api_key=current_user.api_key,
-        is_active=current_user.is_active
-    )
-
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
-    token: str,
+    body: RefreshInput,
     db = Depends(get_database)
 ) -> Any:
     """
     Refresh access token.
     """
     try:
-        # Verify refresh token
+        # Verify refresh token (JSON body)
+        token = body.refreshToken
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         token_type = payload.get("type")
         
@@ -387,4 +381,4 @@ async def get_current_user_info(
         subscription_tier=getattr(current_user, 'subscription_tier', current_user.subscription),
         api_key=current_user.api_key,
         is_active=current_user.is_active
-    ) 
+    )
