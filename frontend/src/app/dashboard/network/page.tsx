@@ -137,8 +137,15 @@ export default function NetworkPage() {
       setError(null);
 
     } catch (err) {
-      setError('Failed to load network data');
+      const msg = (err as any)?.message || 'Failed to load network data';
+      setError(msg);
       console.error('Error loading network data:', err);
+      if (msg.includes('401')) {
+        toast.error('Session expired. Please log in again.');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login';
+        }
+      }
     } finally {
       setLoading(false);
     }

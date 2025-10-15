@@ -11,15 +11,6 @@ export function useSecurityAlerts(params?: { page?: number; limit?: number; seve
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
   
-  // Get alert by ID
-  const getAlertById = (alertId: string) => {
-    return useQuery({
-      queryKey: ['security-alert', alertId],
-      queryFn: () => api.securityAlerts.getAlertById(alertId),
-      enabled: !!alertId,
-    });
-  };
-  
   // Mark alert as read mutation
   const markAlertAsRead = useMutation({
     mutationFn: (alertId: string) => api.securityAlerts.markAlertAsRead(alertId),
@@ -32,7 +23,15 @@ export function useSecurityAlerts(params?: { page?: number; limit?: number; seve
     alerts,
     isLoading,
     error,
-    getAlertById,
     markAlertAsRead,
   };
-} 
+}
+
+// Dedicated hook to fetch an alert by id (valid hook usage)
+export function useAlertById(alertId: string) {
+  return useQuery({
+    queryKey: ['security-alert', alertId],
+    queryFn: () => api.securityAlerts.getAlertById(alertId),
+    enabled: !!alertId,
+  });
+}

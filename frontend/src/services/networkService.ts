@@ -56,6 +56,10 @@ export interface HostDetails {
   nmap_error?: string;
 }
 
+export interface HostDetailsOptions {
+  profile?: 'top-100' | 'top-1000' | 'full';
+}
+
 export const networkApi = {
   // Get all discovered devices from background service
   getDiscoveredDevices: async (options?: { includeVulns?: boolean }): Promise<DevicesResponse> => {
@@ -148,8 +152,10 @@ export const networkInfoApi = {
     if (!response.ok) throw new Error('Failed to load network info');
     return response.json();
   },
-  getHostDetails: async (ip: string): Promise<HostDetails> => {
-    const response = await fetch(`${API_URL}/network/host?ip=${encodeURIComponent(ip)}`, { ...fetchConfig });
+  getHostDetails: async (ip: string, options?: HostDetailsOptions): Promise<HostDetails> => {
+    const params = new URLSearchParams({ ip });
+    if (options?.profile) params.append('profile', options.profile);
+    const response = await fetch(`${API_URL}/network/host?${params.toString()}`, { ...fetchConfig });
     if (!response.ok) throw new Error('Failed to load host details');
     return response.json();
   }

@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { getCookie, setCookie, deleteCookie } from 'cookies-next';
 import { toast } from 'react-hot-toast';
 

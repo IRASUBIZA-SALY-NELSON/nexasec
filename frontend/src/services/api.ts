@@ -7,17 +7,17 @@ const getAuthHeaders = () => {
   let token = '';
   if (typeof window !== 'undefined') {
     // Check cookies first - this is where login stores the token
-    token = getCookie('auth_token') as string || 
-            localStorage.getItem('token') || 
-            localStorage.getItem('auth_token') || 
-            '';
+    token = getCookie('auth_token') as string ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('auth_token') ||
+      '';
   }
-  
+
   console.log('🔐 Auth Debug:', {
     tokenFound: !!token,
     cookieToken: !!getCookie('auth_token')
   });
-  
+
   return {
     'Content-Type': 'application/json',
     'Authorization': token ? `Bearer ${token}` : '',
@@ -58,9 +58,9 @@ export const authApi = {
         },
         body: JSON.stringify(credentials)
       });
-      
+
       const data = await handleApiResponse(response);
-      
+
       // Store tokens after successful login
       if (data.access_token) {
         localStorage.setItem('auth_token', data.access_token);
@@ -69,14 +69,14 @@ export const authApi = {
           localStorage.setItem('refresh_token', data.refresh_token);
         }
       }
-      
+
       return data;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   },
-  
+
   signup: async (userData: {
     email: string;
     password: string;
@@ -91,29 +91,29 @@ export const authApi = {
         ...getFetchOptions(),
         body: JSON.stringify(userData)
       });
-      
+
       return await handleApiResponse(response);
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
     }
   },
-  
+
   logout: async () => {
     try {
       const response = await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
         ...getFetchOptions()
       });
-      
+
       if (!response.ok) {
         console.warn('Logout request failed on server, but will proceed with local logout');
       }
-      
+
       // Clean up local storage even if server logout fails
       secureStorage.remove('user');
       secureStorage.remove('token');
-      
+
       return true;
     } catch (error) {
       console.error('Logout error:', error);
@@ -140,80 +140,80 @@ export const scanApi = {
       formData.append('outputDirectory', scanConfig.outputDirectory);
       formData.append('scanType', scanConfig.scanType);
       formData.append('useCustomPasswordList', String(scanConfig.useCustomPasswordList));
-      
+
       if (scanConfig.useCustomPasswordList && scanConfig.customPasswordList) {
         formData.append('customPasswordList', scanConfig.customPasswordList);
       }
-      
+
       const response = await fetch(`${API_URL}/scan/start`, {
         method: 'POST',
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to start scan');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error starting scan:', error);
       throw error;
     }
   },
-  
+
   getScanStatus: async (scanId: string) => {
     try {
       const response = await fetch(`${API_URL}/scan/${scanId}/status`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to get scan status');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error getting scan status:', error);
       throw error;
     }
   },
-  
+
   getScanResults: async (scanId: string) => {
     try {
       const response = await fetch(`${API_URL}/scan/${scanId}/results`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to get scan results');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error getting scan results:', error);
       throw error;
     }
   },
-  
+
   searchScanResults: async (scanId: string, query: string) => {
     try {
       const response = await fetch(`${API_URL}/scan/${scanId}/search?q=${encodeURIComponent(query)}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to search scan results');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error searching scan results:', error);
       throw error;
     }
   },
-  
+
   downloadScanResults: async (scanId: string) => {
     try {
       const response = await fetch(`${API_URL}/scan/${scanId}/download`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to download scan results');
       }
-      
+
       return await response.blob();
     } catch (error) {
       console.error('Error downloading scan results:', error);
@@ -229,49 +229,49 @@ export const dashboardApi = {
       const response = await fetch(`${API_URL}/dashboard/system-health`, {
         ...getFetchOptions()
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to get system health');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error getting system health:', error);
       throw error;
     }
   },
-  
+
   getAlerts: async (limit?: number) => {
     try {
-      const url = limit 
-        ? `${API_URL}/dashboard/alerts?limit=${limit}` 
+      const url = limit
+        ? `${API_URL}/dashboard/alerts?limit=${limit}`
         : `${API_URL}/dashboard/alerts`;
-        
+
       const response = await fetch(url, {
         ...getFetchOptions()
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to get alerts');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error getting alerts:', error);
       throw error;
     }
   },
-  
+
   getThreatData: async () => {
     try {
       const response = await fetch(`${API_URL}/dashboard/threat-data`, {
         ...getFetchOptions()
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to get threat data');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error getting threat data:', error);
@@ -323,7 +323,7 @@ export const api = {
   getToken: () => {
     return secureStorage.get('token');
   },
-  
+
   getUser: () => {
     return secureStorage.get('user');
   },
@@ -346,7 +346,12 @@ export const api = {
     });
 
     if (!response.ok) {
-      throw new Error('API request failed');
+      try {
+        const err = await response.json();
+        throw new Error(err?.detail || `${response.status} ${response.statusText}`);
+      } catch {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
     }
 
     return response.json();

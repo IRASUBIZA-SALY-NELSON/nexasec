@@ -3,7 +3,8 @@ import { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, usePathname } from 'next/navigation';
 import CyberLoader from '@/components/ui/CyberLoader';
-import api from '@/lib/api';
+import api, { api as apiLib } from '@/lib/api';
+import { authApi } from '@/services/api';
 import { getCookie } from 'cookies-next';
 
 interface User {
@@ -20,7 +21,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;
-  signup: (email: string, password: string, name: string, company?: string, plan?: string | null) => Promise<any>;
+  signup: (email: string, password: string, name: string, company?: string, plan?: string | null) => Promise<unknown>;
   logout: () => Promise<void>;
 }
 
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isLoadingUser) {
       checkAuth();
     }
-  }, [isLoadingUser, pathname, router, setUser, setIsAuthenticated]);
+  }, [isLoadingUser, pathname, router, setUser, setIsAuthenticated, protectedRoutes]);
 
   // Simplified login function
   const login = async (credentials: { email: string; password: string }) => {
@@ -108,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     name: string, 
     company?: string,
     plan?: string | null
-  ) => {
+  ): Promise<unknown> => {
     try {
       const signupData = await authApi.signup({
         email,
@@ -171,4 +172,4 @@ export function useAuthContext() {
     throw new Error('useAuthContext must be used within an AuthProvider');
   }
   return context;
-} 
+}

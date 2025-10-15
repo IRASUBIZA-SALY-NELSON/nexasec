@@ -23,33 +23,29 @@ export function useSecurityScans() {
     },
   });
   
-  // Get scan status
-  const getScanStatus = (scanId: string) => {
-    return useQuery({
-      queryKey: ['scan-status', scanId],
-      queryFn: () => api.securityScans.getScanStatus(scanId),
-      enabled: !!scanId,
-      refetchInterval: (data) => {
-        // Refetch every 5 seconds until scan is complete
-        return data?.status === 'completed' || data?.status === 'failed' ? false : 5000;
-      },
-    });
-  };
-  
-  // Get scan results
-  const getScanResults = (scanId: string) => {
-    return useQuery({
-      queryKey: ['scan-results', scanId],
-      queryFn: () => api.securityScans.getScanResults(scanId),
-      enabled: !!scanId,
-    });
-  };
-  
   return {
     scanHistory,
     isLoadingScanHistory,
     startScan,
-    getScanStatus,
-    getScanResults,
   };
-} 
+}
+
+export function useScanStatus(scanId: string) {
+  return useQuery({
+    queryKey: ['scan-status', scanId],
+    queryFn: () => api.securityScans.getScanStatus(scanId),
+    enabled: !!scanId,
+    refetchInterval: (data) => {
+      // Refetch every 5 seconds until scan is complete
+      return (data as any)?.status === 'completed' || (data as any)?.status === 'failed' ? false : 5000;
+    },
+  });
+}
+
+export function useScanResults(scanId: string) {
+  return useQuery({
+    queryKey: ['scan-results', scanId],
+    queryFn: () => api.securityScans.getScanResults(scanId),
+    enabled: !!scanId,
+  });
+}
