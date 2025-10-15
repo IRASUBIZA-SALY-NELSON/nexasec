@@ -13,23 +13,25 @@ ENV PYTHONUNBUFFERED=1
 # Install WeasyPrint runtime deps: Cairo, Pango, GDK-PixBuf, GLib/GObject, fonts
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
-    python3-dev \
-    net-tools \
-    iputils-arping \
-    nmap \
-    curl ca-certificates \
-    libcairo2 \
-    libpango-1.0-0 \
-    libpangoft2-1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    libglib2.0-0 \
-    libgobject-2.0-0 \
-    libffi-dev \
-    libxml2 \
-    libxslt1.1 \
-    fonts-dejavu-core \
-    fonts-liberation && \
+      build-essential \
+      python3-dev \
+      net-tools \
+      iputils-arping \
+      nmap \
+      curl ca-certificates \
+      libcairo2 \
+      libpango-1.0-0 \
+      libpangoft2-1.0-0 \
+      libgdk-pixbuf-2.0-0 \
+      libglib2.0-0 \
+      libgobject-2.0-0 \
+      libffi-dev \
+      libxml2 \
+      libxslt1.1 \
+      libfreetype6 \
+      libfontconfig1 \
+      fonts-dejavu-core \
+      fonts-liberation && \
     rm -rf /var/lib/apt/lists/*
 
 # Create app directory
