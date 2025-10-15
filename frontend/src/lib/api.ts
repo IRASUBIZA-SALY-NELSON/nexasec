@@ -11,13 +11,13 @@ function resolveApiBaseUrl(): string {
 
   // 2) On the server (SSR/ISR), default to hosted API to avoid pointing at localhost
   if (typeof window === 'undefined') {
-    return 'https://nexasec.onrender.com/api/v1';
+    return 'https://nexasec-1.onrender.com-1/api/v1';
   }
 
   // 3) In the browser, infer based on current host
   const host = window.location.host;
   if (host.endsWith('vercel.app')) {
-    return 'https://nexasec.onrender.com/api/v1';
+    return 'https://nexasec.onrender-1.com-1/api/v1';
   }
 
   // 4) Local dev default
