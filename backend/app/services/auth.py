@@ -71,8 +71,12 @@ async def get_user_by_email(db: AsyncIOMotorDatabase, email: str) -> Optional[Us
     return UserInDB(**user_dict) if user_dict else None
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verify password against hash. Return False on verification/backend errors instead of raising."""
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception as e:
+        logger.error(f"Password verification error: {e}")
+        return False
 
 def get_password_hash(password: str) -> str:
     """Generate password hash."""
@@ -118,18 +122,21 @@ def generate_api_key() -> str:
 
 async def authenticate_user(db: AsyncIOMotorDatabase, username: str, password: str) -> Optional[dict]:
     """Authenticate user with email/username and password."""
-    # The username could be an email in both cases (form login and JSON login)
     logger.info(f"Attempting to authenticate user: {username}")
     
-    # Find user by email (username is expected to be an email)
     user_dict = await db["users"].find_one({"email": username})
     
     if not user_dict:
         logger.warning(f"Authentication failed: User not found with email {username}")
         return None
     
-    # Verify password
-    if not verify_password(password, user_dict["hashed_password"]):
+    # Ensure hashed_password exists and is a string
+    hashed = user_dict.get("hashed_password")
+    if not isinstance(hashed, str) or not hashed:
+        logger.error(f"Authentication failed: Missing or invalid hashed_password for user {username}")
+        return None
+
+    if not verify_password(password, hashed):
         logger.warning(f"Authentication failed: Invalid password for user {username}")
         return None
     
