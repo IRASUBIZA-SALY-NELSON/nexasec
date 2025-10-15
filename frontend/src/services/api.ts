@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { fetchConfig, API_URL } from '@/lib/api';
+import { API_URL } from '@/lib/api';
 import { secureStorage } from '@/lib/storage';
 import { getCookie } from 'cookies-next';
 
@@ -38,7 +38,7 @@ const handleApiResponse = async (response: Response) => {
     try {
       const errorData = await response.json();
       errorMessage = errorData.detail || 'Request failed';
-    } catch (e) {
+    } catch (_) {
       errorMessage = `${response.status}: ${response.statusText}`;
     }
     throw new Error(errorMessage);
@@ -304,19 +304,12 @@ export const logsApi = {
   }
 };
 
-const axiosInstance = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
 export const api = {
   setToken: (token: string) => {
     secureStorage.set('token', token);
   },
 
-  setUser: (user: any) => {
+  setUser: (user: unknown) => {
     secureStorage.set('user', user);
   },
 
@@ -357,11 +350,11 @@ export const api = {
     return response.json();
   },
 
-  post: async (endpoint: string, data: any) => {
-    const options: any = {
+  post: async <TBody extends object | FormData = object, TResp = unknown>(endpoint: string, data: TBody): Promise<TResp> => {
+    const options: RequestInit & { headers: Record<string, string> } = {
       ...getFetchOptions(),
       method: 'POST',
-      body: data instanceof FormData ? data : JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data as object),
     };
 
     if (!(data instanceof FormData)) {
@@ -379,6 +372,6 @@ export const api = {
       }
     }
 
-    return response.json();
+    return response.json() as Promise<TResp>;
   }
-}; 
+};

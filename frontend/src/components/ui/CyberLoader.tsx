@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 interface CyberLoaderProps {
   fullScreen?: boolean;
@@ -17,7 +17,7 @@ export default function CyberLoader({
   const [progress, setProgress] = useState(0);
   const [securityMessages, setSecurityMessages] = useState<string[]>([]);
   
-  const messages = [
+  const messages = useMemo(() => [
     "Initializing secure connection...",
     "Verifying digital signature...",
     "Encrypting data channels...",
@@ -25,7 +25,7 @@ export default function CyberLoader({
     "Establishing secure tunnel...",
     "Authenticating credentials...",
     "Applying security protocols..."
-  ];
+  ], []);
   
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -63,7 +63,7 @@ export default function CyberLoader({
       clearInterval(interval);
       clearInterval(messageInterval);
     };
-  }, [duration, onComplete]);
+  }, [duration, onComplete, messages]);
   
   const loader = (
     <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto">

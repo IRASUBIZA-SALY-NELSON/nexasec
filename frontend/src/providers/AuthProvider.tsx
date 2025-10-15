@@ -1,9 +1,9 @@
 "use client"
-import { createContext, useContext, ReactNode, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, usePathname } from 'next/navigation';
 import CyberLoader from '@/components/ui/CyberLoader';
-import api, { api as apiLib } from '@/lib/api';
+import api from '@/lib/api';
 import { authApi } from '@/services/api';
 import { getCookie } from 'cookies-next';
 
@@ -28,31 +28,31 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { 
-    user, 
+  const {
+    user,
     setUser,
-    isAuthenticated, 
+    isAuthenticated,
     setIsAuthenticated,
-    isLoadingUser 
+    isLoadingUser
   } = useAuth();
-  
+
   const router = useRouter();
   const pathname = usePathname();
-  
-  // Protected routes that require authentication
-  const protectedRoutes = [
+
+  // Protected routes that require authentication (memoized to avoid changing deps)
+  const protectedRoutes = useMemo(() => [
     '/dashboard',
     '/profile',
     '/security',
     '/subscriptions',
     '/settings'
-  ];
+  ], []);
 
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
-      
+
       if (!token || !storedUser) {
         if (protectedRoutes.some(route => pathname?.startsWith(route))) {
           router.push('/auth/login');
@@ -104,9 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Simplified signup function
   const signup = async (
-    email: string, 
-    password: string, 
-    name: string, 
+    email: string,
+    password: string,
+    name: string,
     company?: string,
     plan?: string | null
   ): Promise<unknown> => {
@@ -118,17 +118,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         company,
         plan: plan || "basic"
       });
-      
+
       // After successful signup, log the user in
       await login({ email, password });
-      
+
       return signupData;
     } catch (error) {
       console.error("Signup error:", error);
       throw error;
     }
   };
-  
+
   // Simplified logout function
   const logout = async () => {
     try {
@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   if (isLoadingUser) {
     return <CyberLoader text="Initializing secure environment..." />;
   }
-  
+
   return (
     <AuthContext.Provider
       value={{
