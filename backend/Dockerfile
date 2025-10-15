@@ -10,6 +10,7 @@ ENV PYTHONUNBUFFERED=1
 # - iputils-arping provides 'arping' (optional alternative)
 # - nmap for ping sweep
 # - build-essential & python3-dev are needed to compile some deps (e.g., netifaces)
+# Install WeasyPrint runtime deps: Cairo, Pango, GDK-PixBuf, GLib/GObject, fonts
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
@@ -17,7 +18,18 @@ RUN apt-get update && \
     net-tools \
     iputils-arping \
     nmap \
-    curl ca-certificates && \
+    curl ca-certificates \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    libglib2.0-0 \
+    libgobject-2.0-0 \
+    libffi-dev \
+    libxml2 \
+    libxslt1.1 \
+    fonts-dejavu-core \
+    fonts-liberation && \
     rm -rf /var/lib/apt/lists/*
 
 # Create app directory
