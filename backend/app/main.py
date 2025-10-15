@@ -67,7 +67,7 @@ allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://nexasec.vercel.app",
-    "https://nexasec.onrender.com",
+    "https://nexasec-1.onrender.com",
 ]
 
 app.add_middleware(
