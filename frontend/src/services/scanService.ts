@@ -51,10 +51,38 @@ export const scanService = {
     return response;
   },
 
-  getAllScans: async (scanId?: string) => {
-    const endpoint = scanId ? `/scans/${scanId}/status` : `/scans`;
+  getAllScans: async (scanId?: string, options?: { skip?: number; limit?: number }) => {
+    if (scanId) {
+      const endpoint = `/scans/${scanId}/status`;
+      const response = await api.get(endpoint);
+      return response;
+    }
+    const params = new URLSearchParams();
+    if (options?.skip !== undefined) params.append('skip', String(options.skip));
+    if (options?.limit !== undefined) params.append('limit', String(options.limit));
+    const endpoint = params.toString() ? `/scans?${params.toString()}` : `/scans`;
     const response = await api.get(endpoint);
     return response;
+  },
+
+  getScansPage: async (options: { skip?: number; limit?: number } = {}) => {
+    const params = new URLSearchParams();
+    if (options.skip !== undefined) params.append('skip', String(options.skip));
+    if (options.limit !== undefined) params.append('limit', String(options.limit));
+    const url = `${API_URL}/scans${params.toString() ? `?${params.toString()}` : ''}`;
+    const res = await fetch(url, {
+      credentials: 'include',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(typeof window !== 'undefined' && document.cookie ? {} : {}),
+      }
+    });
+    if (!res.ok) throw new Error('Failed to list scans');
+    const totalStr = res.headers.get('X-Total-Count');
+    const total = totalStr ? Number(totalStr) : undefined;
+    const items = await res.json();
+    return { items, total };
   },
 
   downloadResults: async (id: string): Promise<Blob> => {

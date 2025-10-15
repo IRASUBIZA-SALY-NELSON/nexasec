@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Any, Dict, List, Optional
 import asyncio
 import os
 import re
 import shutil
+import xml.etree.ElementTree as ET
 
 from app.services.auth import get_current_user
 from app.models.user import UserInDB
@@ -166,11 +167,31 @@ async def get_network_map(current_user: UserInDB = Depends(get_current_user)) ->
     return _cached_map
 
 @router.get("/devices", summary="Get all discovered network devices", tags=["Network"])
-async def get_discovered_devices(current_user: UserInDB = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_discovered_devices(
+    current_user: UserInDB = Depends(get_current_user),
+    db = Depends(get_database),
+    include_vulns: bool = Query(False, description="Include per-device vulnerability counts")
+) -> Dict[str, Any]:
     """Get all devices discovered by the background network discovery service."""
     try:
         discovery_service = get_network_discovery_service()
         devices = await discovery_service.get_discovered_devices()
+        
+        # Optionally enrich with vulnerability counts by IP
+        if include_vulns and devices:
+            for d in devices:
+                ip = d.get("ip")
+                if not ip:
+                    d["vulnerabilities"] = 0
+                    continue
+                try:
+                    # Count vulnerabilities where affected_components contains entries like "<ip>:<port>"
+                    count = await db["vulnerabilities"].count_documents({
+                        "affected_components": {"$elemMatch": {"$regex": f"^{ip}(:\\d+)?$"}}
+                    })
+                    d["vulnerabilities"] = int(count)
+                except Exception:
+                    d["vulnerabilities"] = 0
         
         return {
             "devices": devices,
@@ -263,8 +284,8 @@ async def get_host_details_internal(ip: str) -> Dict[str, Any]:
         out_arp, _ = await proc_arp.communicate()
         line = out_arp.decode().strip()
         parts = line.split()
-        if len(parts) >= 5 and parts[4] != "INCOMPLETE":
-            mac = parts[4]
+        if len(parts) >= 5:
+            mac = parts[4] if parts[4] != "INCOMPLETE" else None
     except Exception:
         mac = None
 
@@ -279,7 +300,8 @@ async def get_host_details_internal(ip: str) -> Dict[str, Any]:
     services: List[Dict[str, Any]] = []
     nmap_error: Optional[str] = None
     if nmap_exec:
-        cmd = f"{nmap_exec} -sS -sV --top-ports 100 -Pn -n {ip}"
+        # Use XML output for robust parsing
+        cmd = f"{nmap_exec} -sS -sV --top-ports 100 -Pn -n -oX - {ip}"
         proc = await asyncio.create_subprocess_shell(
             cmd,
             stdout=asyncio.subprocess.PIPE,
@@ -287,28 +309,34 @@ async def get_host_details_internal(ip: str) -> Dict[str, Any]:
         )
         stdout, stderr = await proc.communicate()
         if proc.returncode == 0:
-            # Rough parse: lines like "PORT   STATE SERVICE VERSION"
-            for line in stdout.decode().splitlines():
-                line = line.strip()
-                if not line or "/" not in line or line.startswith("Nmap"):
-                    continue
-                # Example: "22/tcp open  ssh OpenSSH 8.9p1"
-                try:
-                    port_proto, rest = line.split(maxsplit=1)
-                    port = port_proto.split("/")[0]
-                    # state service ...
-                    parts = rest.split()
-                    state = parts[0]
-                    service = parts[1] if len(parts) > 1 else None
-                    version = " ".join(parts[2:]) if len(parts) > 2 else None
-                    services.append({
-                        "port": int(port),
-                        "state": state,
-                        "service": service,
-                        "version": version
-                    })
-                except Exception:
-                    continue
+            try:
+                root = ET.fromstring(stdout.decode())
+                for host in root.findall('.//host'):
+                    for port in host.findall('.//ports/port'):
+                        try:
+                            portid = int(port.get('portid'))
+                            state_el = port.find('state')
+                            state = state_el.get('state') if state_el is not None else None
+                            service_el = port.find('service')
+                            service_name = service_el.get('name') if service_el is not None else None
+                            version_parts = []
+                            if service_el is not None:
+                                for attr in ['product', 'version', 'extrainfo']:
+                                    val = service_el.get(attr)
+                                    if val:
+                                        version_parts.append(val)
+                            version = ' '.join(version_parts) if version_parts else None
+                            services.append({
+                                "port": portid,
+                                "state": state,
+                                "service": service_name,
+                                "version": version,
+                            })
+                        except Exception:
+                            continue
+            except Exception:
+                # Fallback: set error but keep going
+                nmap_error = "Failed to parse nmap XML"
         else:
             nmap_error = (stderr.decode().strip() or stdout.decode().strip()) or "nmap failed"
     else:

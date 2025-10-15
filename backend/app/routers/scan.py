@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Response
 from typing import Any, List, Optional
 from app.core.database import get_database
 from app.services.auth import get_current_user
@@ -11,7 +11,7 @@ from datetime import datetime
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import logging
-from app.schemas import ScanStatus as ScanStatusSchema, ScanConfig
+from app.schemas import ScanStatusSchema, ScanConfig
 
 router = APIRouter()
 
@@ -249,6 +249,7 @@ async def cancel_scan(
 
 @router.get("/")
 async def list_scans(
+    response: Response,
     skip: int = 0,
     limit: int = 10,
     status: Optional[ScanStatus] = None,
@@ -263,10 +264,12 @@ async def list_scans(
     if status:
         query["status"] = status
     
+    total = await db["scans"].count_documents(query)
     cursor = db["scans"].find(query).skip(skip).limit(limit).sort("created_at", -1)
     scans = await cursor.to_list(length=limit)
     
     # Format the response with richer fields for UI mapping
+    response.headers["X-Total-Count"] = str(total)
     return [
         {
             "id": str(scan["_id"]),

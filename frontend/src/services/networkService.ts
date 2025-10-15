@@ -58,9 +58,10 @@ export interface HostDetails {
 
 export const networkApi = {
   // Get all discovered devices from background service
-  getDiscoveredDevices: async (): Promise<DevicesResponse> => {
+  getDiscoveredDevices: async (options?: { includeVulns?: boolean }): Promise<DevicesResponse> => {
     try {
-      const response = await api.get('/network/devices');
+      const qs = options?.includeVulns ? '?include_vulns=true' : '';
+      const response = await api.get(`/network/devices${qs}`);
       return response;
     } catch (error) {
       console.error('Error fetching discovered devices:', error);
@@ -73,7 +74,7 @@ export const networkApi = {
     const response = await fetch(`${API_URL}/network/devices/${ip}`, {
       ...fetchConfig
     });
-    
+
     if (!response.ok) throw new Error('Failed to get device details');
     return response.json();
   },
@@ -134,7 +135,7 @@ export const networkApi = {
   discoverDevices: async () => {
     return networkApi.getDiscoveredDevices();
   }
-}; 
+};
 
 export const networkInfoApi = {
   getArp: async (): Promise<{ items: { ip: string; mac?: string; state?: string }[] }> => {

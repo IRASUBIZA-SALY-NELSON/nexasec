@@ -45,18 +45,22 @@ export default function NetworkPage() {
   const [filteredDevices, setFilteredDevices] = useState<NetworkDevice[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [scanHistory, setScanHistory] = useState<NetworkScan[]>([]);
+  const [scanSkip, setScanSkip] = useState(0);
+  const [scanLimit] = useState(20);
+  const [totalScans, setTotalScans] = useState<number | undefined>(undefined);
   const [networkData, setNetworkData] = useState<NetworkMap | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scanLogs, setScanLogs] = useState<string[]>([]);
   const [discoveryStatus, setDiscoveryStatus] = useState({ running: false, discovered_devices_count: 0 });
+  const [refreshMs, setRefreshMs] = useState(30000);
 
   const loadData = async () => {
     try {
       setLoading(true);
 
       // Fetch discovered devices from the background service
-      const devicesResponse = await networkApi.getDiscoveredDevices();
+      const devicesResponse = await networkApi.getDiscoveredDevices({ includeVulns: true });
       console.log('Discovered devices:', devicesResponse);
 
       // Convert discovered devices to NetworkDevice format
@@ -67,7 +71,7 @@ export default function NetworkPage() {
         type: device.device_type,
         status: device.status,
         lastSeen: device.last_seen,
-        vulnerabilities: 0, // TODO: Add vulnerability data
+        vulnerabilities: (device as any).vulnerabilities || 0,
         mac: device.mac,
         hostname: device.hostname,
         vendor: device.vendor,
@@ -81,11 +85,18 @@ export default function NetworkPage() {
       // Fetch discovery status
       const status = await networkApi.getDiscoveryStatus();
       setDiscoveryStatus(status);
+      // Auto-start discovery if it is not running
+      if (!status.running) {
+        try { await networkApi.startDiscovery(); } catch { }
+      }
 
       // Try to fetch scan history
       let scanHistoryData;
       try {
-        scanHistoryData = await scanService.getAllScans();
+        const page = await scanService.getScansPage({ skip: 0, limit: scanLimit });
+        scanHistoryData = page.items;
+        setTotalScans(page.total);
+        setScanSkip(page.items?.length || 0);
         // Map backend fields to UI expectations
         const mappedHistory: NetworkScan[] = (scanHistoryData || []).map((s: any) => {
           const created = s.created_at ? new Date(s.created_at) : null;
@@ -94,12 +105,21 @@ export default function NetworkPage() {
           const vulnCount = typeof s.vulnerabilities_found === 'number'
             ? s.vulnerabilities_found
             : (s.vulnerability_counts
-                ? Object.values(s.vulnerability_counts).reduce((acc: number, val: any) => acc + (typeof val === 'number' ? val : 0), 0)
-                : 0);
+              ? Object.values(s.vulnerability_counts).reduce((acc: number, val: any) => acc + (typeof val === 'number' ? val : 0), 0)
+              : 0);
+          const formatDuration = (secs: number) => {
+            if (secs < 60) return `${secs}s`;
+            const m = Math.floor(secs / 60);
+            const s = secs % 60;
+            if (m < 60) return `${m}m ${s}s`;
+            const h = Math.floor(m / 60);
+            const mm = m % 60;
+            return `${h}h ${mm}m ${s}s`;
+          };
           return {
             id: s.id || s._id || '',
             timestamp: created ? created.toLocaleString() : '',
-            duration: durationSec !== null ? `${durationSec}s` : '-',
+            duration: durationSec !== null ? formatDuration(durationSec) : '-',
             devicesScanned: typeof s.total_hosts === 'number' ? s.total_hosts : 0,
             vulnerabilitiesFound: vulnCount,
             status: (s.status || 'completed') as NetworkScan['status'],
@@ -127,39 +147,42 @@ export default function NetworkPage() {
   useEffect(() => {
     loadData();
 
-    // Set up periodic refresh every 30 seconds
-    const interval = setInterval(loadData, 30000);
+    // Set up periodic refresh respecting current refreshMs
+    const interval = setInterval(loadData, refreshMs);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshMs]);
 
+  // Adjust refresh interval dynamically depending on discovery running state
   useEffect(() => {
-    let filtered = devices;
+    setRefreshMs(discoveryStatus.running ? 10000 : 30000);
+  }, [discoveryStatus.running]);
 
-    // Apply search filter
-    if (searchQuery) {
-      filtered = filtered.filter(device =>
-        device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        device.ip.includes(searchQuery) ||
-        device.hostname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        device.mac?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        device.vendor?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const loadMoreScans = async () => {
+    try {
+      const page = await scanService.getScansPage({ skip: scanSkip, limit: scanLimit });
+      const mapped: NetworkScan[] = (page.items || []).map((s: any) => {
+        const created = s.created_at ? new Date(s.created_at) : null;
+        const updated = s.end_time ? new Date(s.end_time) : (s.updated_at ? new Date(s.updated_at) : null);
+        const durationSec = created && updated ? Math.max(0, Math.round((updated.getTime() - created.getTime()) / 1000)) : null;
+        const sum = s.vulnerability_counts ? Object.values(s.vulnerability_counts).reduce((a: number, v: any) => a + (typeof v === 'number' ? v : 0), 0) : 0;
+        const format = (secs: number) => secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m ${secs % 60}s`;
+        return {
+          id: s.id || s._id || '',
+          timestamp: created ? created.toLocaleString() : '',
+          duration: durationSec !== null ? format(durationSec) : '-',
+          devicesScanned: typeof s.total_hosts === 'number' ? s.total_hosts : 0,
+          vulnerabilitiesFound: typeof s.vulnerabilities_found === 'number' ? s.vulnerabilities_found : sum,
+          status: (s.status || 'completed') as NetworkScan['status'],
+        };
+      });
+      setScanHistory(prev => [...prev, ...mapped]);
+      setScanSkip(prev => prev + (page.items?.length || 0));
+      if (page.total !== undefined) setTotalScans(page.total);
+    } catch (e) {
+      console.error('Failed to load more scans', e);
     }
-
-    // Apply tab filter
-    if (activeTab !== "overview") {
-      if (activeTab === "online") {
-        filtered = filtered.filter(device => device.status === "online");
-      } else if (activeTab === "offline") {
-        filtered = filtered.filter(device => device.status === "offline");
-      } else if (activeTab === "vulnerable") {
-        filtered = filtered.filter(device => device.vulnerabilities > 0);
-      }
-    }
-
-    setFilteredDevices(filtered);
-  }, [searchQuery, activeTab, devices]);
+  };
 
   const handleRunScan = async () => {
     try {
@@ -386,7 +409,7 @@ export default function NetworkPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${device.status === 'online' ? "bg-green-900/30 text-green-400" :
-                        "bg-red-900/30 text-red-400"
+                      "bg-red-900/30 text-red-400"
                       }`}>
                       {device.status.charAt(0).toUpperCase() + device.status.slice(1)}
                     </span>
@@ -480,8 +503,8 @@ export default function NetworkPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${scan.status === 'completed' ? "bg-green-900/30 text-green-400" :
-                          scan.status === 'in_progress' ? "bg-blue-900/30 text-blue-400" :
-                            "bg-red-900/30 text-red-400"
+                        scan.status === 'in_progress' ? "bg-blue-900/30 text-blue-400" :
+                          "bg-red-900/30 text-red-400"
                         }`}>
                         {scan.status.charAt(0).toUpperCase() + scan.status.slice(1)}
                       </span>
@@ -492,6 +515,13 @@ export default function NetworkPage() {
             </table>
           </div>
         </div>
+        {typeof totalScans === 'number' && scanHistory.length < totalScans && (
+          <div className="flex justify-center mt-4">
+            <button onClick={loadMoreScans} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md">
+              Load more ({scanHistory.length}/{totalScans})
+            </button>
+          </div>
+        )}
       </div>
 
       {networkData && networkData.nodes.length > 0 ? (
