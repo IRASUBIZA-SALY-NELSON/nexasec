@@ -73,7 +73,7 @@ export default function CookieConsent() {
           <div className="flex-1">
             <h3 className="text-lg font-medium text-white mb-1">We value your privacy</h3>
             <p className="text-sm text-gray-300">
-              We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.
+              We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking &quot;Accept All&quot;, you consent to our use of cookies.
             </p>
           </div>
           <div className="flex flex-shrink-0 gap-3">
@@ -122,7 +122,7 @@ export default function CookieConsent() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="space-y-4 mb-6">
               <div className="p-3 border border-gray-800 rounded-md bg-gray-800/50">
                 <div className="flex items-center justify-between">
@@ -131,9 +131,9 @@ export default function CookieConsent() {
                     <p className="text-sm text-gray-400">Required for the website to function properly</p>
                   </div>
                   <div className="relative">
-                    <input 
-                      type="checkbox" 
-                      checked={cookiePreferences.necessary} 
+                    <input
+                      type="checkbox"
+                      checked={cookiePreferences.necessary}
                       disabled
                       className="sr-only"
                     />
@@ -142,7 +142,7 @@ export default function CookieConsent() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-3 border border-gray-800 rounded-md hover:bg-gray-800/30">
                 <div className="flex items-center justify-between">
                   <div>
@@ -150,9 +150,9 @@ export default function CookieConsent() {
                     <p className="text-sm text-gray-400">Enable personalized features and preferences</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={cookiePreferences.functional} 
+                    <input
+                      type="checkbox"
+                      checked={cookiePreferences.functional}
                       onChange={() => handleToggle('functional')}
                       className="sr-only peer"
                     />
@@ -160,7 +160,7 @@ export default function CookieConsent() {
                   </label>
                 </div>
               </div>
-              
+
               <div className="p-3 border border-gray-800 rounded-md hover:bg-gray-800/30">
                 <div className="flex items-center justify-between">
                   <div>
@@ -168,9 +168,9 @@ export default function CookieConsent() {
                     <p className="text-sm text-gray-400">Help us improve our website by collecting anonymous data</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={cookiePreferences.analytics} 
+                    <input
+                      type="checkbox"
+                      checked={cookiePreferences.analytics}
                       onChange={() => handleToggle('analytics')}
                       className="sr-only peer"
                     />
@@ -178,7 +178,7 @@ export default function CookieConsent() {
                   </label>
                 </div>
               </div>
-              
+
               <div className="p-3 border border-gray-800 rounded-md hover:bg-gray-800/30">
                 <div className="flex items-center justify-between">
                   <div>
@@ -186,9 +186,9 @@ export default function CookieConsent() {
                     <p className="text-sm text-gray-400">Allow us to provide personalized ads and content</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={cookiePreferences.marketing} 
+                    <input
+                      type="checkbox"
+                      checked={cookiePreferences.marketing}
                       onChange={() => handleToggle('marketing')}
                       className="sr-only peer"
                     />
@@ -197,7 +197,7 @@ export default function CookieConsent() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowCustomize(false)}
@@ -217,4 +217,4 @@ export default function CookieConsent() {
       )}
     </>
   );
-} 
+}

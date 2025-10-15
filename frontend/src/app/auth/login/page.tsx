@@ -15,20 +15,19 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuthContext();
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     if (!email || !password) {
       toast.error("Please enter both email and password");
       return;
     }
-    
+
     try {
       setIsLoading(true);
-    
+
       const response = await login({
         email: email,
         password: password,
@@ -52,19 +51,18 @@ export default function Login() {
               <Image src="/logo.png" alt="NexaSec Logo" className="h-32" width={100} height={100} />
             </Link>
           </div>
-          
+
           <h1 className="text-2xl font-bold text-center text-white mb-2">Welcome Back</h1>
           <p className="text-gray-400 text-center mb-8">Log in to access your NexaSec security dashboard</p>
-          
+
           <form onSubmit={handleSubmit}>
             <AuthForm
               email={email}
               setEmail={setEmail}
               password={password}
               setPassword={setPassword}
-              isLoading={isLoading}
             />
-            
+
             <button
               type="submit"
               className="w-full mt-6 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-black font-medium py-3 px-4 rounded-md transition-all duration-300 shadow-lg shadow-cyan-500/20 flex justify-center items-center"
@@ -72,9 +70,9 @@ export default function Login() {
             >
               {isLoading ? "Logging in..." : "Log In"}
             </button>
-            
+
             <div className="mt-6 text-center text-sm">
-              <span className="text-gray-400">Don't have an account?</span>{" "}
+              <span className="text-gray-400">Don&apos;t have an account?</span>{" "}
               <Link href="/auth/signup" className="text-cyan-400 hover:text-cyan-300">
                 Sign up now
               </Link>
@@ -84,4 +82,4 @@ export default function Login() {
       </div>
     </div>
   );
-} 
+}

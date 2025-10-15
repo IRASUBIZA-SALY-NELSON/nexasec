@@ -492,7 +492,7 @@ export default function NetworkScanPage() {
           {/* Search Results */}
           {searchResults && (
             <div className="mt-6 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
-              <h3 className="text-lg font-medium mb-3">Search Results for "{searchQuery}"</h3>
+              <h3 className="text-lg font-medium mb-3">Search Results for &quot;{searchQuery}&quot;</h3>
               <pre className="bg-black/50 p-4 rounded overflow-x-auto text-sm">
                 {JSON.stringify(searchResults, null, 2)}
               </pre>

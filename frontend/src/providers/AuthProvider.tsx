@@ -6,18 +6,10 @@ import CyberLoader from '@/components/ui/CyberLoader';
 import api from '@/lib/api';
 import { authApi } from '@/services/api';
 import { getCookie } from 'cookies-next';
-
-interface User {
-  id?: string;
-  email: string;
-  full_name?: string;
-  company_name?: string;
-  subscription_tier?: string;
-  is_active: boolean;
-}
+import type { UserData } from '@/lib/api';
 
 interface AuthContextType {
-  user: User | null;
+  user: UserData | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;

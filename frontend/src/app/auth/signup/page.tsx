@@ -108,7 +108,6 @@ export default function SignUp() {
                   setName={setName}
                   company={company}
                   setCompany={setCompany}
-                  isLoading={isLoading}
                   isSignUp
                 />
                 
