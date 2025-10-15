@@ -12,8 +12,9 @@ interface ServiceItem {
 }
 
 export default function HostDetailsPage() {
-  const params = useParams<{ ip?: string }>();
-  const ip = decodeURIComponent(params.ip ?? "");
+  const params = useParams();
+  const ipParam = (params as { ip?: string } | null)?.ip ?? "";
+  const ip = decodeURIComponent(ipParam);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +33,17 @@ export default function HostDetailsPage() {
       try {
         setLoading(true);
         const res = await networkInfoApi.getHostDetails(ip);
-        setData(res);
+        // Normalize API services (ServiceInfo) -> UI services (ServiceItem)
+        const normalized = {
+          ...res,
+          services: (res.services || []).map((s: { name: string; port: number; status: string; version?: string }) => ({
+            port: s.port,
+            state: s.status,
+            service: s.name,
+            version: s.version,
+          }))
+        } as { ip: string; mac?: string; services: ServiceItem[]; nmap_error?: string };
+        setData(normalized);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Failed to load host details");
       } finally {

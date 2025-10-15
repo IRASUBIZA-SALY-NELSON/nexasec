@@ -97,7 +97,10 @@ export const networkApi = {
   // Discovery service controls
   startDiscovery: async (): Promise<{ message: string }> => {
     try {
-      const response = await api.post('/network/discovery/start', {});
+      const response = await api.post<Record<string, never>, { message: string }>(
+        '/network/discovery/start',
+        {}
+      );
       return response;
     } catch (error) {
       console.error('Error starting discovery:', error);
@@ -107,7 +110,10 @@ export const networkApi = {
 
   stopDiscovery: async (): Promise<{ message: string }> => {
     try {
-      const response = await api.post('/network/discovery/stop', {});
+      const response = await api.post<Record<string, never>, { message: string }>(
+        '/network/discovery/stop',
+        {}
+      );
       return response;
     } catch (error) {
       console.error('Error stopping discovery:', error);

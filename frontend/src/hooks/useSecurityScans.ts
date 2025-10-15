@@ -40,9 +40,10 @@ export function useScanStatus(scanId: string) {
     queryKey: ['scan-status', scanId],
     queryFn: () => api.securityScans.getScanStatus(scanId),
     enabled: !!scanId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Refetch every 5 seconds until scan is complete
-      return data?.status === 'completed' || data?.status === 'failed' ? false : 5000;
+      const status = query.state.data?.status;
+      return status === 'completed' || status === 'failed' ? false : 5000;
     },
   });
 }

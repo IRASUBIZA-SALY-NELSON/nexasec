@@ -91,7 +91,7 @@ export default function Dashboard() {
           </div>
           <div className="p-4 border border-gray-800 rounded">
             <h3 className="text-sm font-medium text-gray-400">Subscription</h3>
-            <p className="text-lg font-medium text-cyan-400">{user.subscription_tier || 'Basic'}</p>
+            <p className="text-lg font-medium text-cyan-400">Basic</p>
           </div>
         </div>
       </div>

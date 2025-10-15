@@ -23,12 +23,12 @@ export const scanService = {
         formData.append('useCustomPasswordList', String(config.useCustomPasswordList));
         formData.append('customPasswordList', config.customPasswordList);
         
-        const response = await api.post('/scans/start', formData);
+        const response = await api.post<FormData, { scanId: string }>('/scans/start', formData);
         return response;
       }
       
       // Regular JSON request without file
-      const response = await api.post('/scans/start', config);
+      const response = await api.post<ScanConfig, { scanId: string }>('/scans/start', config);
       return response;
     } catch (error) {
       console.error('Error starting scan:', error);

@@ -14,9 +14,9 @@ export default function SettingsPage() {
   const [accountForm, setAccountForm] = useState({
     name: user?.name || "",
     email: user?.email || "",
-    company: user?.companyName || "",
-    jobTitle: user?.jobTitle || "",
-    phone: user?.phone || ""
+    company: "",
+    jobTitle: "",
+    phone: ""
   });
 
   // Notification preferences form state
@@ -113,8 +113,8 @@ export default function SettingsPage() {
               <button
                 onClick={() => setActiveTab("account")}
                 className={`px-4 py-3 text-left ${activeTab === "account"
-                    ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
-                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
+                  ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
+                  : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
                   }`}
               >
                 Account Settings
@@ -122,8 +122,8 @@ export default function SettingsPage() {
               <button
                 onClick={() => setActiveTab("notifications")}
                 className={`px-4 py-3 text-left ${activeTab === "notifications"
-                    ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
-                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
+                  ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
+                  : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
                   }`}
               >
                 Notification Preferences
@@ -131,8 +131,8 @@ export default function SettingsPage() {
               <button
                 onClick={() => setActiveTab("security")}
                 className={`px-4 py-3 text-left ${activeTab === "security"
-                    ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
-                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
+                  ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
+                  : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
                   }`}
               >
                 Security Settings
@@ -140,8 +140,8 @@ export default function SettingsPage() {
               <button
                 onClick={() => setActiveTab("billing")}
                 className={`px-4 py-3 text-left ${activeTab === "billing"
-                    ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
-                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
+                  ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
+                  : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
                   }`}
               >
                 Billing & Subscription
@@ -149,8 +149,8 @@ export default function SettingsPage() {
               <button
                 onClick={() => setActiveTab("api")}
                 className={`px-4 py-3 text-left ${activeTab === "api"
-                    ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
-                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
+                  ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
+                  : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
                   }`}
               >
                 API Access

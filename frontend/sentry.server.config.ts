@@ -17,3 +17,5 @@ Sentry.init({
 */
 
 console.log("Sentry server initialization disabled");
+
+export { };

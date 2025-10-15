@@ -311,7 +311,12 @@ export const api = {
   },
 
   setUser: (user: unknown) => {
-    secureStorage.set('user', user);
+    try {
+      secureStorage.set('user', JSON.stringify(user));
+    } catch {
+      // Fallback to raw set if stringify fails
+      secureStorage.set('user', String(user));
+    }
   },
 
   getToken: () => {
@@ -319,7 +324,13 @@ export const api = {
   },
 
   getUser: () => {
-    return secureStorage.get('user');
+    const raw = secureStorage.get('user');
+    try {
+      if (typeof raw === 'string') return JSON.parse(raw);
+      return raw;
+    } catch {
+      return raw;
+    }
   },
 
   clearAuth: () => {
@@ -361,6 +372,28 @@ export const api = {
     if (!(data instanceof FormData)) {
       options.headers['Content-Type'] = 'application/json';
     }
+
+    const response = await fetch(`${API_URL}${endpoint}`, options);
+
+    if (!response.ok) {
+      try {
+        const err = await response.json();
+        throw new Error(err?.detail || `${response.status} ${response.statusText}`);
+      } catch {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+    }
+
+    return response.json() as Promise<TResp>;
+  },
+
+  patch: async <TBody extends object = object, TResp = unknown>(endpoint: string, data: TBody): Promise<TResp> => {
+    const options: RequestInit & { headers: Record<string, string> } = {
+      ...getFetchOptions(),
+      method: 'PATCH',
+      body: JSON.stringify(data as object),
+    };
+    options.headers['Content-Type'] = 'application/json';
 
     const response = await fetch(`${API_URL}${endpoint}`, options);
 
