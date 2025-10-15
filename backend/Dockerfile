@@ -11,26 +11,26 @@ ENV PYTHONUNBUFFERED=1
 # - nmap for ping sweep
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      net-tools \
-      iputils-arping \
-      nmap \
-      curl ca-certificates && \
+    net-tools \
+    iputils-arping \
+    nmap \
+    curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /app
 
 # Copy backend code and install Python dependencies
-# Copy only requirements first to leverage Docker layer caching
-COPY backend/requirements.txt /app/requirements.txt
+# Since Render build context is the backend/ directory, COPY directly
+COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy the rest of the backend
-COPY backend/ /app/
+COPY . /app/
 
 # Default port (Render injects $PORT at runtime)
 ENV PORT=8000
 
 # Start the FastAPI app
-# Use python -m uvicorn to ensure the correct interpreter is used
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Bind to the Render-provided PORT (fallback to 8000 locally)
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
