@@ -12,8 +12,8 @@ interface ServiceItem {
 }
 
 export default function HostDetailsPage() {
-  const params = useParams<{ ip: string }>();
-  const ip = decodeURIComponent(params.ip || "");
+  const params = useParams<{ ip?: string } | null>();
+  const ip = decodeURIComponent(params?.ip ?? "");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
