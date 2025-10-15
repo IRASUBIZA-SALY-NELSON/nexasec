@@ -2,13 +2,29 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { getCookie, setCookie, deleteCookie } from 'cookies-next';
 import { toast } from 'react-hot-toast';
 
-// Prefer explicit env, else infer based on runtime (Vercel vs local)
-const inferredApiUrl =
-  typeof window !== 'undefined' && window.location.host.endsWith('vercel.app')
-    ? 'https://nexasec.onrender.com/api/v1'
-    : 'http://localhost:8000/api/v1';
+// Compute API base URL safely for both SSR and browser
+function resolveApiBaseUrl(): string {
+  // 1) Explicit override always wins
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || inferredApiUrl;
+  // 2) On the server (SSR/ISR), default to hosted API to avoid pointing at localhost
+  if (typeof window === 'undefined') {
+    return 'https://nexasec.onrender.com/api/v1';
+  }
+
+  // 3) In the browser, infer based on current host
+  const host = window.location.host;
+  if (host.endsWith('vercel.app')) {
+    return 'https://nexasec.onrender.com/api/v1';
+  }
+
+  // 4) Local dev default
+  return 'http://localhost:8000/api/v1';
+}
+
+export const API_URL = resolveApiBaseUrl();
 
 // Define proper types for API responses
 interface ApiErrorResponse {

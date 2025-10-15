@@ -15,45 +15,47 @@ const sw = self as unknown as ServiceWorkerGlobalScope;
 sw.addEventListener('install', (event: ExtendableEvent) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache);
-      })
+      .then((cache) => cache.addAll(urlsToCache))
+      .catch(() => void 0)
   );
 });
 
 sw.addEventListener('fetch', (event: FetchEvent) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return the response from the cached version
-        if (response) {
-          // Also fetch from network to update cache for next time
-          fetch(event.request).then((networkResponse) => {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse.clone());
-            });
-          });
-          return response;
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // Only handle same-origin http(s) GET requests
+  if (req.method !== 'GET') return;
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+  if (url.origin !== sw.location.origin) return;
+
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+
+    // Try cache first
+    const cached = await cache.match(req);
+    if (cached) {
+      // Update cache in the background (stale-while-revalidate)
+      fetch(req).then((networkResponse) => {
+        if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
+          cache.put(req, networkResponse.clone()).catch(() => void 0);
         }
+      }).catch(() => void 0);
+      return cached;
+    }
 
-        // Not in cache - fetch from network
-        return fetch(event.request).then((response) => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          // Open the cache and put the fetched response in it
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-
-          return response;
-        });
-      })
-  );
+    // Fallback to network
+    try {
+      const networkResponse = await fetch(req);
+      if (networkResponse && networkResponse.ok && networkResponse.type === 'basic') {
+        try { await cache.put(req, networkResponse.clone()); } catch { /* ignore quota or invalid scheme */ }
+      }
+      return networkResponse;
+    } catch (e) {
+      return new Response('Network request failed and no cache available', {
+        status: 503,
+        statusText: 'Service Unavailable'
+      });
+    }
+  })());
 });
