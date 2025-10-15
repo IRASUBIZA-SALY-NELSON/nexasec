@@ -2,7 +2,13 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { getCookie, setCookie, deleteCookie } from 'cookies-next';
 import { toast } from 'react-hot-toast';
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Prefer explicit env, else infer based on runtime (Vercel vs local)
+const inferredApiUrl =
+  typeof window !== 'undefined' && window.location.host.endsWith('vercel.app')
+    ? 'https://nexasec.onrender.com/api/v1'
+    : 'http://localhost:8000/api/v1';
+
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || inferredApiUrl;
 
 // Define proper types for API responses
 interface ApiErrorResponse {
