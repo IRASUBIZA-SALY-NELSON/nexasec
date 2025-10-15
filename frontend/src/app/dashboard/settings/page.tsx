@@ -6,10 +6,10 @@ import { useAuthContext } from "@/providers/AuthProvider";
 
 export default function SettingsPage() {
   const { user } = useAuthContext();
-  
+
   const [activeTab, setActiveTab] = useState("account");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Account settings form state
   const [accountForm, setAccountForm] = useState({
     name: user?.name || "",
@@ -18,7 +18,7 @@ export default function SettingsPage() {
     jobTitle: user?.jobTitle || "",
     phone: user?.phone || ""
   });
-  
+
   // Notification preferences form state
   const [notificationPrefs, setNotificationPrefs] = useState({
     securityAlerts: true,
@@ -26,7 +26,7 @@ export default function SettingsPage() {
     productUpdates: false,
     marketingEmails: false
   });
-  
+
   // Security settings form state
   const [securitySettings, setSecuritySettings] = useState({
     twoFactorAuth: false,
@@ -56,7 +56,7 @@ export default function SettingsPage() {
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       await updateUserSettings(accountForm);
       toast.success("Account settings updated successfully");
@@ -71,7 +71,7 @@ export default function SettingsPage() {
   const handleNotificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       await updateNotificationPreferences(notificationPrefs);
       toast.success("Notification preferences updated successfully");
@@ -86,7 +86,7 @@ export default function SettingsPage() {
   const handleSecuritySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       await updateSecuritySettings(securitySettings);
       toast.success("Security settings updated successfully");
@@ -112,51 +112,46 @@ export default function SettingsPage() {
             <nav className="flex flex-col">
               <button
                 onClick={() => setActiveTab("account")}
-                className={`px-4 py-3 text-left ${
-                  activeTab === "account"
+                className={`px-4 py-3 text-left ${activeTab === "account"
                     ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
                     : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                }`}
+                  }`}
               >
                 Account Settings
               </button>
               <button
                 onClick={() => setActiveTab("notifications")}
-                className={`px-4 py-3 text-left ${
-                  activeTab === "notifications"
+                className={`px-4 py-3 text-left ${activeTab === "notifications"
                     ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
                     : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                }`}
+                  }`}
               >
                 Notification Preferences
               </button>
               <button
                 onClick={() => setActiveTab("security")}
-                className={`px-4 py-3 text-left ${
-                  activeTab === "security"
+                className={`px-4 py-3 text-left ${activeTab === "security"
                     ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
                     : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                }`}
+                  }`}
               >
                 Security Settings
               </button>
               <button
                 onClick={() => setActiveTab("billing")}
-                className={`px-4 py-3 text-left ${
-                  activeTab === "billing"
+                className={`px-4 py-3 text-left ${activeTab === "billing"
                     ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
                     : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                }`}
+                  }`}
               >
                 Billing & Subscription
               </button>
               <button
                 onClick={() => setActiveTab("api")}
-                className={`px-4 py-3 text-left ${
-                  activeTab === "api"
+                className={`px-4 py-3 text-left ${activeTab === "api"
                     ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
                     : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                }`}
+                  }`}
               >
                 API Access
               </button>
@@ -382,7 +377,7 @@ export default function SettingsPage() {
                       {securitySettings.twoFactorAuth && (
                         <div className="ml-7 mt-2 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
                           <p className="text-sm text-gray-300 mb-2">
-                            Two-factor authentication is enabled. You'll receive a verification code via SMS when signing in.
+                            Two-factor authentication is enabled. You&apos;ll receive a verification code via SMS when signing in.
                           </p>
                           <button
                             type="button"
@@ -394,7 +389,7 @@ export default function SettingsPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div>
                       <label htmlFor="sessionTimeout" className="block text-sm font-medium text-gray-300 mb-2">
                         Session Timeout (minutes)
@@ -416,7 +411,7 @@ export default function SettingsPage() {
                         Your session will automatically expire after this period of inactivity
                       </p>
                     </div>
-                    
+
                     <div>
                       <div className="flex items-start mb-4">
                         <div className="flex items-center h-5">
@@ -497,7 +492,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <h3 className="font-medium">Payment Method</h3>
                   <div className="flex items-center p-3 bg-gray-800/50 border border-gray-700 rounded-md">
@@ -510,22 +505,22 @@ export default function SettingsPage() {
                       <p className="font-medium">Visa ending in 4242</p>
                       <p className="text-sm text-gray-400">Expires 12/2024</p>
                     </div>
-                    <button 
+                    <button
                       className="ml-auto text-sm text-cyan-400 hover:text-cyan-300"
                       onClick={() => toast.success("Payment method update would start here")}
                     >
                       Update
                     </button>
                   </div>
-                  
+
                   <div className="flex justify-between pt-4">
-                    <button 
+                    <button
                       className="text-sm text-gray-400 hover:text-gray-300"
                       onClick={() => toast.success("Billing history would be shown here")}
                     >
                       View Billing History
                     </button>
-                    <button 
+                    <button
                       className="text-sm text-red-400 hover:text-red-300"
                       onClick={() => toast.error("Subscription cancellation would start here")}
                     >
@@ -549,13 +544,13 @@ export default function SettingsPage() {
                       readOnly
                       className="flex-grow px-4 py-2 bg-gray-900 border border-gray-700 rounded-md focus:outline-none font-mono text-sm"
                     />
-                    <button 
+                    <button
                       className="ml-2 px-4 py-2 bg-gray-700 text-white rounded-md text-sm"
                       onClick={() => toast.success("API key copied to clipboard")}
                     >
                       Copy
                     </button>
-                    <button 
+                    <button
                       className="ml-2 px-4 py-2 bg-gray-700 text-white rounded-md text-sm"
                       onClick={() => toast.success("API key regenerated")}
                     >
@@ -566,7 +561,7 @@ export default function SettingsPage() {
                     This key provides full access to the NexaSec API. Keep it secure and never share it publicly.
                   </p>
                 </div>
-                
+
                 <div className="space-y-4">
                   <h3 className="font-medium mb-2">API Usage</h3>
                   <div className="bg-gray-800/50 border border-gray-700 rounded-md p-4">
@@ -581,10 +576,10 @@ export default function SettingsPage() {
                       Your plan includes 10,000 API requests per month. Resets on June 1, 2023.
                     </p>
                   </div>
-                  
+
                   <div className="pt-4">
-                    <a 
-                      href="#" 
+                    <a
+                      href="#"
                       className="text-cyan-400 hover:text-cyan-300 text-sm"
                       onClick={(e) => {
                         e.preventDefault();

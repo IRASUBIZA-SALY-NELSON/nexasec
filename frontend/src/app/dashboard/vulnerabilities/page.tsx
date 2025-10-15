@@ -1,7 +1,5 @@
 "use client"
 import { useState, useEffect } from "react";
-import { useAuthContext } from "@/providers/AuthProvider";
-import { useRouter } from "next/navigation";
 import { fetchVulnerabilities, updateVulnerabilityStatus, runVulnerabilityScan } from "@/services/vulnerabilityService";
 import { Vulnerability } from "@/types";
 import SummaryCards from "@/components/dashboard/SummaryCards";

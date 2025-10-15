@@ -1,6 +1,7 @@
 "use client"
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 
 export default function PrivacyPolicy() {
   return (
@@ -26,7 +27,7 @@ export default function PrivacyPolicy() {
       <div className="container mx-auto px-4 py-16 relative z-10">
         <div className="mb-8">
           <Link href="/" className="flex items-center">
-            <img src="/logo.png" alt="NexaSec Logo" className="h-12" />
+            <Image src="/logo.png" alt="NexaSec Logo" width={120} height={48} className="h-12 w-auto" />
           </Link>
         </div>
 

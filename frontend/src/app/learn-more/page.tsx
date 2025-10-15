@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
-import { Shield, Lock, Server, Users, Database, Code } from "lucide-react";
+import { Shield, Lock, Server, Users } from "lucide-react";
 
 export default function LearnMore() {
   return (

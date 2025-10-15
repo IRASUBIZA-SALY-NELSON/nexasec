@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { startNetworkScan, getScanStatus, downloadScanResults, ScanConfig, ScanResult, searchScanResults } from "@/services/scanService";
-import { Search, Download, Shield, Terminal } from "lucide-react";
+import { Search, Download, Shield, Terminal, AlertTriangle } from "lucide-react";
 
 export default function NetworkScanPage() {
   const [networkTarget, setNetworkTarget] = useState("");
@@ -21,18 +21,18 @@ export default function NetworkScanPage() {
   // Poll for scan status if a scan is in progress
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (isScanning && scanId) {
       interval = setInterval(async () => {
         try {
           const status = await getScanStatus(scanId);
           setLogs(status.logs);
-          
+
           if (status.status !== 'in_progress') {
             setIsScanning(false);
             setScanResult(status);
             clearInterval(interval);
-            
+
             if (status.status === 'completed') {
               toast.success("Network scan completed successfully!");
             } else if (status.status === 'failed') {
@@ -47,7 +47,7 @@ export default function NetworkScanPage() {
         }
       }, 3000); // Poll every 3 seconds
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -61,26 +61,26 @@ export default function NetworkScanPage() {
 
   const handleStartScan = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!networkTarget) {
       toast.error("Please enter a network target");
       return;
     }
-    
+
     if (!outputDirectory) {
       toast.error("Please enter an output directory name");
       return;
     }
-    
+
     if (useCustomPasswordList && !customPasswordList) {
       toast.error("Please upload a custom password list or disable the option");
       return;
     }
-    
+
     try {
       setIsScanning(true);
       setLogs([`Starting ${scanType} scan on ${networkTarget}...`]);
-      
+
       const config: ScanConfig = {
         networkTarget,
         outputDirectory,
@@ -88,7 +88,7 @@ export default function NetworkScanPage() {
         useCustomPasswordList,
         customPasswordList: customPasswordList || undefined
       };
-      
+
       const result = await startNetworkScan(config);
       setScanId(result.scanId);
       toast.success("Network scan started successfully!");
@@ -96,12 +96,12 @@ export default function NetworkScanPage() {
       console.error("Error starting scan:", error);
       setIsScanning(false);
       toast.error("Failed to start network scan");
-    } finally {}
+    } finally { }
   };
 
   const handleSearch = async () => {
     if (!scanId || !searchQuery) return;
-    
+
     try {
       const results = await searchScanResults(scanId);
       // Filter results client-side based on searchQuery
@@ -126,7 +126,7 @@ export default function NetworkScanPage() {
 
   const handleDownload = async () => {
     if (!scanId) return;
-    
+
     try {
       const blob = await downloadScanResults(scanId);
       const url = window.URL.createObjectURL(blob);
@@ -153,7 +153,7 @@ export default function NetworkScanPage() {
       {/* Scan Configuration */}
       <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/60 rounded-lg p-6">
         <h2 className="text-xl font-medium mb-4">Scan Configuration</h2>
-        
+
         <div className="space-y-4">
           <div>
             <label htmlFor="networkTarget" className="block text-sm font-medium text-gray-300 mb-1">
@@ -169,7 +169,7 @@ export default function NetworkScanPage() {
               disabled={isScanning}
             />
           </div>
-          
+
           <div>
             <label htmlFor="outputDirectory" className="block text-sm font-medium text-gray-300 mb-1">
               Output Directory Name
@@ -184,18 +184,17 @@ export default function NetworkScanPage() {
               disabled={isScanning}
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Scan Type
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  scanType === 'basic'
-                    ? 'bg-cyan-900/20 border-cyan-700'
-                    : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
-                }`}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${scanType === 'basic'
+                  ? 'bg-cyan-900/20 border-cyan-700'
+                  : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
+                  }`}
                 onClick={() => !isScanning && setScanType('basic')}
               >
                 <div className="flex items-center">
@@ -206,13 +205,12 @@ export default function NetworkScanPage() {
                   Scans the network for TCP and UDP, including service versions and weak passwords
                 </p>
               </div>
-              
+
               <div
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  scanType === 'full'
-                    ? 'bg-cyan-900/20 border-cyan-700'
-                    : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
-                }`}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${scanType === 'full'
+                  ? 'bg-cyan-900/20 border-cyan-700'
+                  : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800'
+                  }`}
                 onClick={() => !isScanning && setScanType('full')}
               >
                 <div className="flex items-center">
@@ -225,7 +223,7 @@ export default function NetworkScanPage() {
               </div>
             </div>
           </div>
-          
+
           <div>
             <div className="flex items-center mb-2">
               <input
@@ -240,7 +238,7 @@ export default function NetworkScanPage() {
                 Use custom password list
               </label>
             </div>
-            
+
             {useCustomPasswordList && (
               <div className="mt-2">
                 <input
@@ -267,7 +265,7 @@ export default function NetworkScanPage() {
               </div>
             )}
           </div>
-          
+
           <div className="pt-4">
             <button
               type="button"
@@ -292,7 +290,7 @@ export default function NetworkScanPage() {
       {(isScanning || logs.length > 0) && (
         <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/60 rounded-lg p-6">
           <h2 className="text-xl font-medium mb-4">Scan Logs</h2>
-          
+
           <div className="bg-black/50 rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm">
             {logs.map((log, index) => (
               <div key={index} className="mb-1">
@@ -311,7 +309,7 @@ export default function NetworkScanPage() {
         <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/60 rounded-lg p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-medium">Scan Results</h2>
-            
+
             <div className="flex space-x-2">
               <div className="relative">
                 <input
@@ -329,7 +327,7 @@ export default function NetworkScanPage() {
                   <Search className="h-5 w-5" />
                 </button>
               </div>
-              
+
               <button
                 onClick={handleDownload}
                 className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 flex items-center"
@@ -339,7 +337,7 @@ export default function NetworkScanPage() {
               </button>
             </div>
           </div>
-          
+
           {/* Services Found */}
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-3">Services Found</h3>
@@ -388,7 +386,7 @@ export default function NetworkScanPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Weak Credentials */}
           {scanResult.weakCredentials && scanResult.weakCredentials.length > 0 && (
             <div className="mb-6">
@@ -441,40 +439,37 @@ export default function NetworkScanPage() {
               </div>
             </div>
           )}
-          
+
           {/* Vulnerabilities */}
           {scanResult.vulnerabilities && scanResult.vulnerabilities.length > 0 && (
             <div>
               <h3 className="text-lg font-medium mb-3">Vulnerabilities Found</h3>
               <div className="space-y-4">
                 {scanResult.vulnerabilities.map((vuln, index) => (
-                  <div key={index} className={`p-4 rounded-lg border ${
-                    vuln.severity === 'critical' ? 'bg-red-900/20 border-red-800/50' :
+                  <div key={index} className={`p-4 rounded-lg border ${vuln.severity === 'critical' ? 'bg-red-900/20 border-red-800/50' :
                     vuln.severity === 'high' ? 'bg-orange-900/20 border-orange-800/50' :
-                    vuln.severity === 'medium' ? 'bg-yellow-900/20 border-yellow-800/50' :
-                    'bg-blue-900/20 border-blue-800/50'
-                  }`}>
+                      vuln.severity === 'medium' ? 'bg-yellow-900/20 border-yellow-800/50' :
+                        'bg-blue-900/20 border-blue-800/50'
+                    }`}>
                     <div className="flex justify-between">
                       <div>
                         <h4 className="font-medium flex items-center">
-                          <AlertTriangle className={`h-4 w-4 mr-2 ${
-                            vuln.severity === 'critical' ? 'text-red-400' :
+                          <AlertTriangle className={`h-4 w-4 mr-2 ${vuln.severity === 'critical' ? 'text-red-400' :
                             vuln.severity === 'high' ? 'text-orange-400' :
-                            vuln.severity === 'medium' ? 'text-yellow-400' :
-                            'text-blue-400'
-                          }`} />
+                              vuln.severity === 'medium' ? 'text-yellow-400' :
+                                'text-blue-400'
+                            }`} />
                           {vuln.cve || `Vulnerability in ${vuln.service}`}
                         </h4>
                         <p className="text-sm text-gray-400 mt-1">
                           Host: {vuln.host} • Service: {vuln.service}
                         </p>
                       </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        vuln.severity === 'critical' ? 'bg-red-900/30 text-red-400' :
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${vuln.severity === 'critical' ? 'bg-red-900/30 text-red-400' :
                         vuln.severity === 'high' ? 'bg-orange-900/30 text-orange-400' :
-                        vuln.severity === 'medium' ? 'bg-yellow-900/30 text-yellow-400' :
-                        'bg-blue-900/30 text-blue-400'
-                      }`}>
+                          vuln.severity === 'medium' ? 'bg-yellow-900/30 text-yellow-400' :
+                            'bg-blue-900/30 text-blue-400'
+                        }`}>
                         {vuln.severity.charAt(0).toUpperCase() + vuln.severity.slice(1)}
                       </span>
                     </div>
@@ -487,9 +482,9 @@ export default function NetworkScanPage() {
               </div>
             </div>
           )}
-          
+
           {/* Search Results */}
-          {searchResults && (
+          {searchResults !== null && (
             <div className="mt-6 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
               <h3 className="text-lg font-medium mb-3">Search Results for &quot;{searchQuery}&quot;</h3>
               <pre className="bg-black/50 p-4 rounded overflow-x-auto text-sm">

@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import FilterTabs from "@/components/dashboard/FilterTabs";
@@ -10,7 +10,6 @@ import { scanService } from "@/services/scanService";
 import { networkApi, NetworkMap, DiscoveredDevice } from "@/services/networkService";
 import NetworkGraph from '@/components/NetworkGraph';
 import CyberLoader from '@/components/ui/CyberLoader';
-import * as api from "@/services/api";
 import { logsApi } from "@/services/api";
 
 interface NetworkDevice {
@@ -37,6 +36,20 @@ interface NetworkScan {
   status: 'completed' | 'in_progress' | 'failed';
 }
 
+type ScanHistoryBackend = {
+  id?: string;
+  _id?: string;
+  created_at?: string;
+  end_time?: string;
+  updated_at?: string;
+  vulnerabilities_found?: number;
+  vulnerability_counts?: Record<string, number> | undefined;
+  total_hosts?: number;
+  status?: string;
+};
+
+type LogItem = { time: string; level: string; message: string };
+
 export default function NetworkPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
@@ -55,7 +68,7 @@ export default function NetworkPage() {
   const [discoveryStatus, setDiscoveryStatus] = useState({ running: false, discovered_devices_count: 0 });
   const [refreshMs, setRefreshMs] = useState(30000);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -71,7 +84,10 @@ export default function NetworkPage() {
         type: device.device_type,
         status: device.status,
         lastSeen: device.last_seen,
-        vulnerabilities: (device as any).vulnerabilities || 0,
+        vulnerabilities: ((): number => {
+          const v = (device as unknown as Record<string, unknown>)?.vulnerabilities;
+          return typeof v === 'number' ? v : 0;
+        })(),
         mac: device.mac,
         hostname: device.hostname,
         vendor: device.vendor,
@@ -98,14 +114,14 @@ export default function NetworkPage() {
         setTotalScans(page.total);
         setScanSkip(page.items?.length || 0);
         // Map backend fields to UI expectations
-        const mappedHistory: NetworkScan[] = (scanHistoryData || []).map((s: any) => {
+        const mappedHistory: NetworkScan[] = (scanHistoryData || []).map((s: ScanHistoryBackend) => {
           const created = s.created_at ? new Date(s.created_at) : null;
           const updated = s.end_time ? new Date(s.end_time) : (s.updated_at ? new Date(s.updated_at) : null);
           const durationSec = created && updated ? Math.max(0, Math.round((updated.getTime() - created.getTime()) / 1000)) : null;
           const vulnCount = typeof s.vulnerabilities_found === 'number'
             ? s.vulnerabilities_found
             : (s.vulnerability_counts
-              ? Object.values(s.vulnerability_counts).reduce((acc: number, val: any) => acc + (typeof val === 'number' ? val : 0), 0)
+              ? Object.values(s.vulnerability_counts).reduce((acc: number, val: unknown) => acc + (typeof val === 'number' ? val : 0), 0)
               : 0);
           const formatDuration = (secs: number) => {
             if (secs < 60) return `${secs}s`;
@@ -136,8 +152,8 @@ export default function NetworkPage() {
       setNetworkData(networkMap);
       setError(null);
 
-    } catch (err) {
-      const msg = (err as any)?.message || 'Failed to load network data';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to load network data';
       setError(msg);
       console.error('Error loading network data:', err);
       if (msg.includes('401')) {
@@ -149,7 +165,7 @@ export default function NetworkPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [scanLimit]);
 
   useEffect(() => {
     loadData();
@@ -158,7 +174,7 @@ export default function NetworkPage() {
     const interval = setInterval(loadData, refreshMs);
 
     return () => clearInterval(interval);
-  }, [refreshMs]);
+  }, [refreshMs, loadData]);
 
   // Adjust refresh interval dynamically depending on discovery running state
   useEffect(() => {
@@ -168,11 +184,11 @@ export default function NetworkPage() {
   const loadMoreScans = async () => {
     try {
       const page = await scanService.getScansPage({ skip: scanSkip, limit: scanLimit });
-      const mapped: NetworkScan[] = (page.items || []).map((s: any) => {
+      const mapped: NetworkScan[] = (page.items || []).map((s: ScanHistoryBackend) => {
         const created = s.created_at ? new Date(s.created_at) : null;
         const updated = s.end_time ? new Date(s.end_time) : (s.updated_at ? new Date(s.updated_at) : null);
         const durationSec = created && updated ? Math.max(0, Math.round((updated.getTime() - created.getTime()) / 1000)) : null;
-        const sum = s.vulnerability_counts ? Object.values(s.vulnerability_counts).reduce((a: number, v: any) => a + (typeof v === 'number' ? v : 0), 0) : 0;
+        const sum = s.vulnerability_counts ? Object.values(s.vulnerability_counts).reduce((a: number, v: unknown) => a + (typeof v === 'number' ? v : 0), 0) : 0;
         const format = (secs: number) => secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m ${secs % 60}s`;
         return {
           id: s.id || s._id || '',
@@ -210,7 +226,8 @@ export default function NetworkPage() {
         // fetch latest logs chunk
         try {
           const logs = await logsApi.list({ limit: 50 });
-          const messages = (logs.items || []).slice(0, 50).map((it: any) => `${it.time} ${it.level} ${it.message}`);
+          const items = (logs.items || []) as unknown as LogItem[];
+          const messages = items.slice(0, 50).map((it: LogItem) => `${it.time} ${it.level} ${it.message}`);
           setScanLogs(messages);
         } catch { }
         if (status.status === 'completed') {

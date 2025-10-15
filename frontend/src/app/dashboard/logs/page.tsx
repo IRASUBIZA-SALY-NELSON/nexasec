@@ -2,6 +2,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { logsApi } from "@/services/api";
 
+interface LogItem {
+  time: string;
+  level: string;
+  logger: string;
+  message: string;
+}
+
 export default function LogsPage() {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("");
@@ -12,7 +19,7 @@ export default function LogsPage() {
   const [limit, setLimit] = useState(50);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<{ total: number; page: number; limit: number; items: any[] }>({ total: 0, page: 1, limit: 50, items: [] });
+  const [data, setData] = useState<{ total: number; page: number; limit: number; items: LogItem[] }>({ total: 0, page: 1, limit: 50, items: [] });
 
   const levels = useMemo(() => ["", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], []);
 
@@ -30,8 +37,8 @@ export default function LogsPage() {
         limit,
       });
       setData(res);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load logs");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load logs");
     } finally {
       setLoading(false);
     }
@@ -65,7 +72,7 @@ export default function LogsPage() {
         <div className="flex items-center gap-2">
           <button type="submit" className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded text-white">Search</button>
           <select className="bg-gray-800/60 border border-gray-700 rounded px-2 py-2" value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
-            {[25,50,100,200,500].map((n) => (<option key={n} value={n}>{n}/page</option>))}
+            {[25, 50, 100, 200, 500].map((n) => (<option key={n} value={n}>{n}/page</option>))}
           </select>
         </div>
       </form>
@@ -95,11 +102,10 @@ export default function LogsPage() {
                   <tr key={idx} className="border-t border-gray-800/60">
                     <td className="px-3 py-2 text-gray-400">{item.time}</td>
                     <td className="px-3 py-2">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        item.level === 'ERROR' || item.level === 'CRITICAL' ? 'bg-red-900/40 text-red-300' :
+                      <span className={`px-2 py-1 rounded text-xs ${item.level === 'ERROR' || item.level === 'CRITICAL' ? 'bg-red-900/40 text-red-300' :
                         item.level === 'WARNING' ? 'bg-yellow-900/40 text-yellow-300' :
-                        'bg-cyan-900/40 text-cyan-300'
-                      }`}>{item.level}</span>
+                          'bg-cyan-900/40 text-cyan-300'
+                        }`}>{item.level}</span>
                     </td>
                     <td className="px-3 py-2 text-gray-300">{item.logger}</td>
                     <td className="px-3 py-2 whitespace-pre-wrap text-gray-200">{item.message}</td>
@@ -110,13 +116,11 @@ export default function LogsPage() {
           )}
         </div>
         <div className="p-3 border-t border-gray-800/60 flex items-center justify-between text-sm">
-          <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p-1))} className="px-3 py-1 bg-gray-800/70 rounded disabled:opacity-50">Prev</button>
+          <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1 bg-gray-800/70 rounded disabled:opacity-50">Prev</button>
           <div>Page {page}</div>
-          <button disabled={(page * limit) >= data.total} onClick={() => setPage((p) => p+1)} className="px-3 py-1 bg-gray-800/70 rounded disabled:opacity-50">Next</button>
+          <button disabled={(page * limit) >= data.total} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 bg-gray-800/70 rounded disabled:opacity-50">Next</button>
         </div>
       </div>
     </div>
   );
 }
-
-

@@ -6,6 +6,7 @@ import * as api from "@/services/api";
 import DataFetcher from "@/components/dashboard/DataFetcher";
 import dynamic from "next/dynamic";
 import CyberLoader from "@/components/ui/CyberLoader";
+import type { TrendDataPoint } from "@/types/dashboard";
 
 // Lazy load heavy components
 const ThreatChart = dynamic(() => import('@/components/dashboard/ThreatChart'), {
@@ -16,9 +17,9 @@ const ThreatChart = dynamic(() => import('@/components/dashboard/ThreatChart'), 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuthContext();
   const router = useRouter();
-  const [dateRange, setDateRange] = useState("28 Jan - 28 Dec, 2023");
+  const [dateRange] = useState("28 Jan - 28 Dec, 2023");
   const [pageLoading, setPageLoading] = useState(true);
-  const [threatData, setThreatData] = useState([]);
+  const [threatData, setThreatData] = useState<TrendDataPoint[]>([]);
   const [threatDataLoading, setThreatDataLoading] = useState(true);
 
   // Check authentication
@@ -36,8 +37,8 @@ export default function Dashboard() {
       try {
         setThreatDataLoading(true);
         const data = await api.dashboardApi.getThreatData();
-        console.log(data)
-        setThreatData(data as any);
+        console.log(data);
+        setThreatData(data as TrendDataPoint[]);
       } catch (error) {
         console.error("Error loading threat data:", error);
       } finally {

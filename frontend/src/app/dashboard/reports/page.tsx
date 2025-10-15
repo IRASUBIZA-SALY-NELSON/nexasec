@@ -63,7 +63,7 @@ export default function ReportsPage() {
       setIsGenerating(true);
       toast.loading("Generating new security report...");
       
-      const result = await generateReport({
+      await generateReport({
         type: "security",
         includeRemediation: true
       });

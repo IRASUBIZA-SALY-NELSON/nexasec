@@ -5,10 +5,8 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Pricing from "@/components/Pricing";
 import Testimonials from "@/components/Testimonials";
-import { useAuthContext } from "@/providers/AuthProvider";
 
 export default function Home() {
-  const { user } = useAuthContext();
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-950 text-white">
       <div className="relative overflow-hidden">

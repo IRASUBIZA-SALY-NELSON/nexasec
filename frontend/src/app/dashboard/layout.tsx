@@ -1,13 +1,13 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Network, 
-  ShieldAlert, 
-  FileBarChart, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Network,
+  ShieldAlert,
+  FileBarChart,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -15,13 +15,13 @@ import {
   Scan
 } from "lucide-react";
 import { useAuthContext } from "@/providers/AuthProvider";
+import Image from "next/image";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useAuthContext();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
@@ -96,14 +96,13 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-screen bg-gray-900/95 backdrop-blur-sm border-r border-gray-800 transition-all duration-300 ease-in-out z-40 ${
-          sidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full"
-        }`}
+        className={`fixed left-0 top-0 h-screen bg-gray-900/95 backdrop-blur-sm border-r border-gray-800 transition-all duration-300 ease-in-out z-40 ${sidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full overflow-hidden">
           <div className="flex items-center justify-center h-16 border-b border-gray-800 px-4">
             <Link href="/" className="flex items-center">
-              <img src="/logo.png" alt="NexaSec Logo" className="h-12" />
+              <Image src="/logo.png" alt="NexaSec Logo" width={120} height={48} className="h-12 w-auto" />
             </Link>
           </div>
 
@@ -112,11 +111,10 @@ export default function DashboardLayout({
               <button
                 key={item.name}
                 onClick={() => handleNavigation(item.href)}
-                className={`flex items-center w-full px-4 py-3 rounded-md transition-colors text-left ${
-                  isLinkActive(item.href)
-                    ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
-                    : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
-                }`}
+                className={`flex items-center w-full px-4 py-3 rounded-md transition-colors text-left ${isLinkActive(item.href)
+                  ? "bg-cyan-900/30 text-cyan-400 border-l-4 border-cyan-400"
+                  : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
+                  }`}
               >
                 {item.icon}
                 <span className="ml-3 whitespace-nowrap">{item.name}</span>
@@ -146,9 +144,8 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div
-        className={`h-screen overflow-y-auto transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "lg:ml-64" : "ml-0"
-        }`}
+        className={`h-screen overflow-y-auto transition-all duration-300 ease-in-out ${sidebarOpen ? "lg:ml-64" : "ml-0"
+          }`}
       >
         <main className="p-4 md:p-6 pt-16">
           {children}
