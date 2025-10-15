@@ -5,12 +5,15 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install required system packages for network discovery
+# Install required system packages for network discovery and build tools for Python wheels
 # - net-tools provides 'arp' (on Debian/Ubuntu)
 # - iputils-arping provides 'arping' (optional alternative)
 # - nmap for ping sweep
+# - build-essential & python3-dev are needed to compile some deps (e.g., netifaces)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-dev \
     net-tools \
     iputils-arping \
     nmap \
