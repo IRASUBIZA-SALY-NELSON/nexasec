@@ -8,7 +8,7 @@ const getAuthHeaders = () => {
   let token = '';
   if (typeof window !== 'undefined') {
     // Check cookies first - this is where login stores the token
-    token = getCookie('auth_token') as string ||
+    token = (getCookie('auth_token') as string) ||
       localStorage.getItem('token') ||
       localStorage.getItem('auth_token') ||
       '';
@@ -19,10 +19,11 @@ const getAuthHeaders = () => {
     cookieToken: !!getCookie('auth_token')
   });
 
-  return {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
   };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
 };
 
 const getFetchOptions = () => ({
@@ -30,6 +31,58 @@ const getFetchOptions = () => ({
   mode: 'cors' as RequestMode,
   headers: getAuthHeaders()
 });
+
+// Helper to refresh access token using stored refresh_token
+async function refreshAccessToken(): Promise<string> {
+  try {
+    if (typeof window === 'undefined') throw new Error('No window context');
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) throw new Error('No refresh token available');
+
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    });
+
+    if (!res.ok) {
+      throw new Error('Refresh failed');
+    }
+    const data = await res.json();
+    const newAccess = data?.access_token || data?.accessToken;
+    const newRefresh = data?.refresh_token || data?.refreshToken;
+    if (!newAccess) throw new Error('Invalid refresh response');
+    localStorage.setItem('auth_token', newAccess);
+    localStorage.setItem('token', newAccess);
+    if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+    return newAccess;
+  } catch (e) {
+    // Cleanup on refresh failure
+    try {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+    } catch { }
+    throw e;
+  }
+}
+
+// Generic request with single retry after refresh on 401
+async function requestWithRetry(input: RequestInfo, init: RequestInit, retry = true): Promise<Response> {
+  const res = await fetch(input, init);
+  if (res.status !== 401 || !retry) return res;
+
+  // Attempt refresh
+  try {
+    const newAccess = await refreshAccessToken();
+    const headers = new Headers(init.headers as HeadersInit | undefined);
+    headers.set('Authorization', `Bearer ${newAccess}`);
+    const retryInit: RequestInit = { ...init, headers };
+    return await fetch(input, retryInit);
+  } catch {
+    return res; // propagate original 401
+  }
+}
 
 // Helper function to handle API errors
 const handleApiResponse = async (response: Response) => {
@@ -345,7 +398,7 @@ export const api = {
   logsApi,
 
   get: async <TResp = unknown>(endpoint: string): Promise<TResp> => {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await requestWithRetry(`${API_URL}${endpoint}`, {
       ...getFetchOptions(),
       method: 'GET'
     });
@@ -373,7 +426,7 @@ export const api = {
       options.headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, options);
+    const response = await requestWithRetry(`${API_URL}${endpoint}`, options);
 
     if (!response.ok) {
       try {
@@ -395,7 +448,7 @@ export const api = {
     };
     options.headers['Content-Type'] = 'application/json';
 
-    const response = await fetch(`${API_URL}${endpoint}`, options);
+    const response = await requestWithRetry(`${API_URL}${endpoint}`, options);
 
     if (!response.ok) {
       try {
