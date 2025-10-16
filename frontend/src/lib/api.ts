@@ -73,7 +73,11 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getCookie('auth_token');
+    // Prefer cookie, but fall back to localStorage for client-side contexts
+    let token = getCookie('auth_token') as string | undefined;
+    if (!token && typeof window !== 'undefined') {
+      token = localStorage.getItem('token') || localStorage.getItem('auth_token') || undefined;
+    }
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -96,7 +100,12 @@ apiClient.interceptors.response.use(
         }
 
         const response = await apiClient.post('/auth/refresh', { refreshToken });
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        const data = response.data as any;
+        const accessToken = data?.accessToken ?? data?.access_token;
+        const newRefreshToken = data?.refreshToken ?? data?.refresh_token;
+        if (!accessToken || !newRefreshToken) {
+          throw new Error('Invalid refresh response');
+        }
         setCookie('auth_token', accessToken, { maxAge: 60 * 60 });
         setCookie('refresh_token', newRefreshToken, { maxAge: 60 * 60 * 24 * 7 }); // 1 week
 

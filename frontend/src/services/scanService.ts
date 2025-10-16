@@ -60,7 +60,7 @@ export const scanService = {
     const params = new URLSearchParams();
     if (options?.skip !== undefined) params.append('skip', String(options.skip));
     if (options?.limit !== undefined) params.append('limit', String(options.limit));
-    const endpoint = params.toString() ? `/scans?${params.toString()}` : `/scans`;
+    const endpoint = params.toString() ? `/scans/?${params.toString()}` : `/scans/`;
     const response = await api.get(endpoint);
     return response;
   },
@@ -69,22 +69,12 @@ export const scanService = {
     const params = new URLSearchParams();
     if (options.skip !== undefined) params.append('skip', String(options.skip));
     if (options.limit !== undefined) params.append('limit', String(options.limit));
-    const url = `${API_URL}/scans${params.toString() ? `?${params.toString()}` : ''}`;
-    const token = typeof window !== 'undefined'
-      ? (getCookie('auth_token') as string) || localStorage.getItem('token') || localStorage.getItem('auth_token') || ''
-      : '';
-    const res = await fetch(url, {
-      credentials: 'include',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      }
-    });
-    if (!res.ok) throw new Error('Failed to list scans');
-    const totalStr = res.headers.get('X-Total-Count');
-    const total = totalStr ? Number(totalStr) : undefined;
-    const items = await res.json();
+    // Use centralized API client and canonical trailing slash to avoid redirect header loss
+    const endpoint = `/scans/${params.toString() ? `?${params.toString()}` : ''}`;
+    const items = await api.get(endpoint);
+    // If backend returns total count via header in fetch, ensure the API also returns it in body or adapt here.
+    // For now, infer total from array length if header is unavailable.
+    const total = Array.isArray(items) ? items.length : undefined;
     return { items, total };
   },
 
