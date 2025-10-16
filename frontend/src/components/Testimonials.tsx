@@ -70,13 +70,16 @@ export default function Testimonials({ id }: { id?: string }) {
                 <div className="flex items-center justify-center">
                   <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
                     <Image
-                      src={testimonial.image || "https://via.placeholder.com/48"}
+                      src={testimonial.image || "/logo.png"}
                       alt={testimonial.author}
                       className="w-full h-full object-cover"
                       width={48}
                       height={48}
+                      sizes="48px"
+                      unoptimized
                       onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/48";
+                        // Fallback to local logo if remote avatar fails
+                        (e.currentTarget as HTMLImageElement).src = "/logo.png";
                       }}
                     />
                   </div>
