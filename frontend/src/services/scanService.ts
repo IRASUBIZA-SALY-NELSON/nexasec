@@ -11,6 +11,19 @@ export interface ScanConfig {
   customPasswordList?: File;
 }
 
+// Minimal backend scan history item shape used by the UI mapping code
+export type ScanHistoryItem = {
+  id?: string;
+  _id?: string;
+  created_at?: string;
+  end_time?: string;
+  updated_at?: string;
+  vulnerabilities_found?: number;
+  vulnerability_counts?: Record<string, number> | undefined;
+  total_hosts?: number;
+  status?: string;
+};
+
 export const scanService = {
   startScan: async (config: ScanConfig): Promise<{ scanId: string }> => {
     try {
@@ -54,24 +67,26 @@ export const scanService = {
   getAllScans: async (scanId?: string, options?: { skip?: number; limit?: number }) => {
     if (scanId) {
       const endpoint = `/scans/${scanId}/status`;
-      const response = await api.get(endpoint);
+      const response = await api.get<ScanHistoryItem | ScanHistoryItem[]>(endpoint);
       return response;
     }
     const params = new URLSearchParams();
     if (options?.skip !== undefined) params.append('skip', String(options.skip));
     if (options?.limit !== undefined) params.append('limit', String(options.limit));
     const endpoint = params.toString() ? `/scans/?${params.toString()}` : `/scans/`;
-    const response = await api.get(endpoint);
+    const response = await api.get<ScanHistoryItem[]>(endpoint);
     return response;
   },
 
-  getScansPage: async (options: { skip?: number; limit?: number } = {}) => {
+  getScansPage: async (
+    options: { skip?: number; limit?: number } = {}
+  ): Promise<{ items: ScanHistoryItem[]; total?: number }> => {
     const params = new URLSearchParams();
     if (options.skip !== undefined) params.append('skip', String(options.skip));
     if (options.limit !== undefined) params.append('limit', String(options.limit));
     // Use centralized API client and canonical trailing slash to avoid redirect header loss
     const endpoint = `/scans/${params.toString() ? `?${params.toString()}` : ''}`;
-    const items = await api.get(endpoint);
+    const items = await api.get<ScanHistoryItem[]>(endpoint);
     // If backend returns total count via header in fetch, ensure the API also returns it in body or adapt here.
     // For now, infer total from array length if header is unavailable.
     const total = Array.isArray(items) ? items.length : undefined;

@@ -32,6 +32,14 @@ interface ApiErrorResponse {
   detail?: string;
 }
 
+// Token refresh response can be camelCase or snake_case depending on backend
+type RefreshResponse = {
+  accessToken?: string;
+  access_token?: string;
+  refreshToken?: string;
+  refresh_token?: string;
+};
+
 export interface UserData {
   id: string;
   email: string;
@@ -100,7 +108,7 @@ apiClient.interceptors.response.use(
         }
 
         const response = await apiClient.post('/auth/refresh', { refreshToken });
-        const data = response.data as any;
+        const data = response.data as RefreshResponse;
         const accessToken = data?.accessToken ?? data?.access_token;
         const newRefreshToken = data?.refreshToken ?? data?.refresh_token;
         if (!accessToken || !newRefreshToken) {

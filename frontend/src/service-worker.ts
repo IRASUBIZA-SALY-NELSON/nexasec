@@ -51,7 +51,7 @@ sw.addEventListener('fetch', (event: FetchEvent) => {
         try { await cache.put(req, networkResponse.clone()); } catch { /* ignore quota or invalid scheme */ }
       }
       return networkResponse;
-    } catch (e) {
+    } catch {
       return new Response('Network request failed and no cache available', {
         status: 503,
         statusText: 'Service Unavailable'
