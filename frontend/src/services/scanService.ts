@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { ScanResult } from '@/types';
 import { API_URL } from '@/lib/api';
-import { } from './api';
+import { getCookie } from 'cookies-next';
 
 export interface ScanConfig {
   networkTarget: string;
@@ -70,12 +70,15 @@ export const scanService = {
     if (options.skip !== undefined) params.append('skip', String(options.skip));
     if (options.limit !== undefined) params.append('limit', String(options.limit));
     const url = `${API_URL}/scans${params.toString() ? `?${params.toString()}` : ''}`;
+    const token = typeof window !== 'undefined'
+      ? (getCookie('auth_token') as string) || localStorage.getItem('token') || localStorage.getItem('auth_token') || ''
+      : '';
     const res = await fetch(url, {
       credentials: 'include',
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
-        ...(typeof window !== 'undefined' && document.cookie ? {} : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       }
     });
     if (!res.ok) throw new Error('Failed to list scans');
@@ -86,7 +89,16 @@ export const scanService = {
   },
 
   downloadResults: async (id: string): Promise<Blob> => {
-    const res = await fetch(`${API_URL}/scans/${id}/download`, { credentials: 'include' });
+    const token = typeof window !== 'undefined'
+      ? (getCookie('auth_token') as string) || localStorage.getItem('token') || localStorage.getItem('auth_token') || ''
+      : '';
+    const res = await fetch(`${API_URL}/scans/${id}/download`, {
+      credentials: 'include',
+      mode: 'cors',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
+    });
     if (!res.ok) throw new Error('Failed to download scan results');
     return res.blob();
   }
